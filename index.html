@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>המתכונים שלי</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="מתכונים">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAGvklEQVR4nO2dPZIjRRCFawkOoAOIPcBg4+JigU9wAPw9CD4HIPDXwx137cWH1QF0BIyK6Ci6lT0tVf68TL3Pm5gOdVX1p5dVrf5598+PL42QW3wV3QCCC+UgIpSDiFAOIkI5iAjlICKUg4hQDiJCOYgI5SAilIOIUA4iQjmICOUgIpSDiFAOIkI5iAjlICKUg4hQDiJCOYgI5SAilIOIUA4iQjmICOUgIpSDiFAOIkI5iMjX0Q0I4/3Hz8c3/venb+1aAsu7J3kEw10qHOEZdKksh7oQElVFKSiHmxNbillSSo5ALUbKKFJBDhAntmS3JLccsFqM5FUkqxwptBjJqEjKk2DpzGg525wsOTIO8YpEEZIpOQqY0VL1IkdyJBrQ4+BHSILkKGlGy9AvdDnwR3AG8N7hlhXwgdMFs8SAJsdTmdFQ+4soB+ZIWQPYazg5AMfIDbS+Y8mBNjr+QI0AkBxQ4xIIzjigrFZCRuRyuRzZ7Hw+W7dkC8L6BUIOTzMOCiHhKUq4H89y9fmkE9vPCYkTZ+KTwzQ29p04nU5HPuR6ve7819SS2PAIlsPODEmLg0JISKLYKRLoR6QcRmbc1GLSiS03LTFSJMoPoKWsClszTqeTuhnSx2rNbEAISw712Liphe4uJLYpoh4hIeERkxzWZhilhcR2d+oREnIeqEJZGY+EsxYjq10XKDEBZUXxS7ANDK1PnmFVZRRLjHNx8U6O8ma0TUsUI8S5uGQtKyClRKJGiXGVQ0v8lRkqn2mBhR+e4ZH7t5VAM37584fxzz9+/uvmZqfTaf/sOzJ+E1L12IgyY6XFiKTI4ofW5NRnZppszhFevHfMePO/DaD9d5FJjvCpxpvHXtom6eTUSQ7daRSsGTtb6rbZZ1qaJjnCpxrzLC3PEh4ecsxrHj6ax2Pj4PbzPXIIjzTJ0ckbG51c7U9wnsM0Nl4/vLGS//63v412fblcwC9ENZdDMf0Uv3ZvOrHe8rtvtHateFrs/cfPpic80JNDNzaOO+EDeHikmXNMxsbrh5cZM3799OWu7aVTpZ0sM480csyAFhhZsJVjcsKhcm5Dy4zj4bEfGx2tcx6mC9riyaGbGUf8OGJGFirLYVFN9v2oZEZDXq1M1hS7eUb34/f/L24f0GJZ08KuWXDlmMFhBrqKkNdPL3any6IoWFai1ib11kSGcuA8oaY2duMMmhwPTzhiv7737h38R3xQOQgClIOIlJIDYUqI0AYtSslBdKEcRIRyEBHKQUQoBxGhHESklBwIP30htEGLUnIQXSgHEQGVY7n45d5bPGJT/d69qz+3QxdDOcLfCPEk2I0zaHLMEBUelaainYJytIjjVM+MhizHw9OOjufRemxf4BOOhizHPD5+lMyMTmU5mv2RK2xGs5ZjciI9WVk6dsdv5pO1aorpkrB4cnQs/KidGZ00NzVdr9eZ26n7sVS5hm9eiyzPNEaX43w+K162vxzXByyxiArYdUrH4/HWWg9iaAaPPfF/JtgYG8gTjoafHE07PFYETh3AY6Olm5BmqdYSudrvIcd8+uF/ye5lvkcOv2umSQ6Vcx6x4J8vX+Ekh67mGf3QbTPft7Jm/MLl8kNxheJJJjlaqpG9Sa72+8mhlYTpJh9J3+HV0iXHCnw/8Fu4g6sc6uHRsEffYqrheWVu1uRY+YGmyKpJuaYaC95yKIq/GnEcP8q8y97vvbIjug/AC39r5IhdYPjf6pG1rIyAlJgapWQkRg71L8G2xHgqst2duhkhd4jFlJWOxdNVtz/umxaarYIWgRF172CFsjKyPTZGKXLzYwuUkpHI5GiWj2aWrg+aDBLJMzstAm85DpajGT8iff8SsoOi7AePaVrE3oweL0dzeYS++oWGDhUk/DEFCa4hVWE5lpOWFJtV7AORHC3o/RsHRQkRIjw2Go4cje9nGUAwo0EtZUFGJByccQCSoyGNSxRQI4AlRwMbHWfQ+g4nR8MbIx8Ae40oR4McKVMw+wu0WrlJ+SUMphYd0ORYQB67ecB7hy5Hgx/Bh8HvF3pZGSlTYvC16CRIjoUsY7pPol5kSo6FpBGSSItOpuRYSDfKLWebUybHQooIyahFJ7ccHVhF8mrRqSDHAogl2Z1YKCVHJ1CRMlp0Csqx4GZJMScWKssxoi5KVSFGnkWOLXfp8gwqbHleOcibpDwJRnygHESEchARykFEKAcRoRxEhHIQEcpBRCgHEaEcRIRyEBHKQUQoBxGhHESEchARykFEKAcRoRxEhHIQEcpBRCgHEaEcRIRyEBHKQUQoBxGhHESEchARykFE/gOaqLL3uYTMFwAAAABJRU5ErkJggg==">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFFFFF; --ink:#181818; --muted:#8A8A8A; --line:#EDEDED;
+    --accent:#E14D2A; --accent-soft:#FDEEE9;
+    --shadow: 0 10px 26px rgba(0,0,0,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--bg); font-family:'Rubik', sans-serif; color: var(--ink);
+    display:flex; justify-content:center; min-height:100vh;
+  }
+  .phone{ width:100%; max-width:430px; min-height:100vh; position:relative; overflow-x:hidden; }
+  .view{ display:none; padding-bottom:110px; animation:fadeIn .2s ease; }
+  .view.active{ display:block; }
+  @keyframes fadeIn{ from{opacity:0} to{opacity:1} }
+
+  .topbar{ display:flex; align-items:center; justify-content:space-between; padding:24px 20px 6px; }
+  .brand{ font-weight:900; font-size:19px; }
+  .icon-btn{ width:40px;height:40px;border-radius:50%;border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--ink);flex-shrink:0; background:#fff; cursor:pointer; }
+  .section-head{ display:flex; justify-content:space-between; align-items:baseline; padding:0 20px; margin-bottom:14px; }
+  .section-head h2{ font-size:19px; font-weight:800; margin:0; }
+  .section-head span{ font-size:12.5px; color:var(--accent); font-weight:700; cursor:pointer; }
+
+  .list-row{ display:flex; gap:12px; align-items:center; padding:8px 20px; cursor:pointer; }
+  .list-row .thumb{ width:64px;height:64px;border-radius:12px; background-size:cover; background-position:center; flex-shrink:0; }
+  .list-row .name{ font-weight:800; font-size:14px; } .list-row .meta{ font-size:11.5px; color:var(--muted); font-weight:600; margin-top:2px; }
+
+  .toast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background: var(--ink); color:#fff; padding:11px 18px; border-radius:12px; font-size:13px; font-weight:600;
+    opacity:0; transition:all .25s ease; pointer-events:none; z-index:50; max-width:320px; text-align:center; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  .greeting{ padding:14px 20px 20px; }
+  .greeting h1{ font-weight:900; font-size:30px; line-height:1.18; margin:0; letter-spacing:-0.3px; }
+  .greeting .sub{ color:var(--muted); font-size:14.5px; margin-top:6px; font-weight:500; }
+  .search{ margin:0 20px 26px; border:1.5px solid var(--line); border-radius:14px; padding:13px 16px;
+    display:flex; align-items:center; gap:10px; }
+  .search input{ border:none; outline:none; font-family:'Rubik'; font-size:14px; flex:1; background:transparent; color:var(--ink); }
+  .search input::placeholder{ color:var(--muted); font-weight:500; }
+
+  .categories{ display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:0 20px; margin-bottom:34px; }
+  .cat-card{ position:relative; border-radius:14px; height:190px; overflow:hidden; box-shadow: var(--shadow); cursor:pointer; }
+  .cat-card .photo{ position:absolute; inset:0; background-size:cover; background-position:center; }
+  .cat-card .scrim{ position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.82) 100%); }
+  .cat-card .tag{ position:absolute; top:12px; right:12px; font-size:10px; font-weight:800; letter-spacing:0.6px;
+    color:#fff; background:rgba(0,0,0,0.35); padding:4px 9px; border-radius:20px; }
+  .cat-card .body{ position:absolute; right:14px; left:14px; bottom:13px; z-index:2; }
+  .cat-card .label{ font-size:19px; font-weight:900; color:#fff; line-height:1.15; letter-spacing:-0.2px; }
+  .cat-card .count{ font-size:11.5px; color: rgba(255,255,255,0.75); font-weight:600; margin-top:3px; }
+  .cat-card.add-new{ display:flex; align-items:center; justify-content:center; background:#FAFAFA; border:1.5px dashed #D8D8D8; box-shadow:none; }
+  .cat-card.add-new .plus{ font-size:26px; color: var(--muted); font-weight:700; }
+
+  .recent-scroll{ display:flex; gap:14px; overflow-x:auto; padding:0 20px 4px; }
+  .recent-scroll::-webkit-scrollbar{display:none;}
+  .recipe-card{ flex:0 0 150px; border-radius:14px; overflow:hidden; box-shadow: var(--shadow); cursor:pointer; }
+  .recipe-card .thumb{ height:104px; position:relative; }
+  .recipe-card .thumb .scrim2{ position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,0.55) 100%); }
+  .recipe-card .info{ padding:10px 4px 0; }
+  .recipe-card .name{ font-size:13.5px; font-weight:800; margin-bottom:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .recipe-card .src{ font-size:11px; color: var(--muted); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .family-strip{ margin:0 20px 30px; display:flex; align-items:center; gap:10px; cursor:pointer; }
+  .avatar{ width:30px;height:30px;border-radius:50%; display:flex;align-items:center;justify-content:center;
+    font-size:12px; font-weight:800; color:#fff; border:2px solid #fff; box-shadow:var(--shadow); margin-right:-10px; }
+  .family-strip .txt{ font-size:12px; color:var(--muted); font-weight:600; margin-right:6px; }
+
+  .fab-wrap{ position:fixed; bottom:26px; left:50%; transform:translateX(-50%); width:100%; max-width:430px;
+    display:flex; justify-content:center; pointer-events:none; z-index:20; }
+  .fab{ pointer-events:auto; background: var(--accent); color:#fff; border:none; width:60px;height:60px;
+    border-radius:50%; font-size:26px; font-weight:700; display:flex;align-items:center;justify-content:center;
+    box-shadow:0 14px 26px rgba(225,77,42,0.4); cursor:pointer; }
+
+  .sheet-backdrop{ position:fixed; inset:0; background:rgba(20,20,20,0.45); opacity:0; pointer-events:none;
+    transition:opacity .25s ease; z-index:30; display:flex; justify-content:center; }
+  .sheet-backdrop.open{opacity:1; pointer-events:auto;}
+  .sheet{ position:fixed; bottom:0; width:100%; max-width:430px; background:#fff; border-radius:22px 22px 0 0;
+    padding:10px 20px 34px; transform:translateY(110%); transition:transform .3s cubic-bezier(.32,.72,0,1);
+    z-index:31; box-shadow:0 -10px 40px rgba(0,0,0,0.15); max-height:80vh; overflow-y:auto; }
+  .sheet-backdrop.open .sheet{ transform:translateY(0); }
+  .sheet-handle{ width:38px;height:4px;border-radius:3px; background:#E5E5E5; margin:8px auto 20px; }
+  .sheet h3{ font-weight:900; font-size:18px; margin:0 0 4px; }
+  .sheet p.sub{ color:var(--muted); font-size:13px; margin:0 0 18px; font-weight:500; }
+  .opt{ display:flex; align-items:center; gap:14px; padding:14px; border-radius:14px; margin-bottom:9px;
+    border:1.5px solid var(--line); cursor:pointer; }
+  .opt .ic{ width:38px;height:38px; border-radius:50%; display:flex;align-items:center;justify-content:center;
+    font-size:16px; color:var(--accent); background:var(--accent-soft); flex-shrink:0; }
+  .opt .txt .t{ font-weight:800; font-size:14px; }
+  .opt .txt .d{ font-size:11.5px; color:var(--muted); margin-top:1px; font-weight:500; }
+
+  .note{ margin:0 20px 26px; padding:14px 16px; border:1.5px solid var(--line); border-radius:14px;
+    font-size:12.5px; color:var(--muted); line-height:1.6; font-weight:500; }
+  .note b{ color:var(--ink); font-weight:800; }
+  .empty-state{ margin:20px; padding:30px 20px; text-align:center; color:var(--muted); font-size:13.5px; font-weight:600; }
+
+  .hero{ position:relative; height:230px; }
+  .hero .photo{ position:absolute; inset:0; background-size:cover; background-position:center; }
+  .hero .scrim{ position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.85) 100%); }
+  .hero .topnav{ position:absolute; top:20px; right:18px; left:18px; display:flex; justify-content:space-between; z-index:3; }
+  .hero .topnav .icon-btn{ background:rgba(255,255,255,0.9); border:none; }
+  .hero .heroBody{ position:absolute; right:20px; left:20px; bottom:18px; z-index:3; }
+  .hero .heroBody .label{ font-size:26px; font-weight:900; color:#fff; letter-spacing:-0.3px; }
+  .hero .heroBody .count{ font-size:12.5px; color:rgba(255,255,255,0.8); font-weight:600; margin-top:4px; }
+
+  .dish-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:16px 20px 30px; }
+  .dish-tile{ position:relative; border-radius:14px; overflow:hidden; aspect-ratio:1/1; cursor:pointer; box-shadow:var(--shadow); }
+  .dish-tile .photo{ position:absolute; inset:0; background-size:cover; background-position:center; }
+  .dish-tile .scrim{ position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,0) 50%, rgba(0,0,0,0.78) 100%); }
+  .dish-tile .name{ position:absolute; right:10px; left:10px; bottom:9px; color:#fff; font-size:12.5px; font-weight:800; line-height:1.25; z-index:2; }
+
+  .video-box{ margin:16px 20px 4px; border-radius:16px; overflow:hidden; position:relative; aspect-ratio:16/9; background:#111; }
+  .video-box iframe{ position:absolute; inset:0; width:100%; height:100%; border:none; }
+  .video-box .fallback{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff;
+    font-size:13px; font-weight:700; text-align:center; padding:20px; }
+  .video-box .fallback a{ color:#fff; }
+
+  .ing-row.checked .amt, .ing-row.checked .nm{ color:#C4C4C4; text-decoration:line-through; }
+  .ing-row .box{ display:flex; align-items:center; justify-content:center; font-size:12px; color:#fff; transition:all .15s ease; }
+  .ing-row.checked .box{ background:var(--accent); border-color:var(--accent); }
+
+  .recipe-hero{ position:relative; height:280px; }
+  .recipe-hero .photo{ position:absolute; inset:0; background-size:cover; background-position:center; }
+  .recipe-hero .scrim{ position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.75) 100%); }
+  .recipe-hero .topnav{ position:absolute; top:20px; right:18px; left:18px; display:flex; justify-content:space-between; z-index:3; }
+  .recipe-hero .topnav .icon-btn{ background:rgba(255,255,255,0.9); border:none; }
+  .recipe-hero .titleBox{ position:absolute; right:20px; left:20px; bottom:16px; z-index:3; }
+  .recipe-hero .src-tag{ display:inline-block; font-size:10.5px; font-weight:800; letter-spacing:0.3px;
+    color:#fff; background:rgba(0,0,0,0.4); padding:4px 10px; border-radius:20px; margin-bottom:8px; }
+  .recipe-hero h1{ font-size:24px; font-weight:900; color:#fff; margin:0; line-height:1.2; letter-spacing:-0.3px; }
+
+  .meta-row{ display:flex; gap:18px; padding:16px 20px 6px; }
+  .meta-item{ text-align:center; flex:1; }
+  .meta-item .v{ font-weight:900; font-size:15px; }
+  .meta-item .l{ font-size:10.5px; color:var(--muted); font-weight:600; margin-top:2px; }
+  .meta-item + .meta-item{ border-right:1px solid var(--line); }
+
+  .added-by{ margin:14px 20px 6px; padding:12px 14px; border-radius:14px; background:var(--accent-soft);
+    display:flex; align-items:center; gap:10px; font-size:12px; font-weight:600; color:#8A4022; }
+
+  .tabs{ display:flex; gap:8px; padding:18px 20px 12px; }
+  .tab{ padding:9px 18px; border-radius:20px; font-size:13.5px; font-weight:800; border:1.5px solid var(--line); cursor:pointer; }
+  .tab.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+
+  .ing-list{ padding:4px 20px 16px; }
+  .ing-row{ display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--line); cursor:pointer; }
+  .ing-row .box{ width:20px;height:20px;border-radius:6px;border:1.5px solid #D8D8D8; flex-shrink:0; }
+  .ing-row .amt{ font-weight:800; font-size:13.5px; min-width:70px; }
+  .ing-row .nm{ font-size:13.5px; color:#3a3a3a; }
+
+  .steps-list{ padding:4px 20px 16px; display:none; }
+  .step-row{ display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); align-items:flex-start; cursor:pointer; }
+  .step-row .box{ width:22px;height:22px;border-radius:7px; border:1.5px solid #D8D8D8; flex-shrink:0; margin-top:1px;
+    display:flex;align-items:center;justify-content:center; font-size:12px; color:#fff; transition:all .15s ease; }
+  .step-row.checked .box{ background:var(--accent); border-color:var(--accent); }
+  .step-row.checked .txt{ color:#C4C4C4; text-decoration:line-through; }
+  .step-row .num{ width:24px;height:24px;border-radius:50%; background:var(--ink); color:#fff; font-size:12px; font-weight:800;
+    display:flex;align-items:center;justify-content:center; flex-shrink:0; margin-top:1px; }
+  .step-row .txt{ font-size:13.5px; line-height:1.6; color:#3a3a3a; }
+
+  .finish-btn{ margin:8px 20px 0; width:calc(100% - 40px); background:#fff; color:var(--ink); border:1.5px solid var(--line);
+    border-radius:14px; padding:13px; font-size:13.5px; font-weight:800; font-family:'Rubik'; cursor:pointer; }
+
+  .sticky-cta{ position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:430px;
+    background:#fff; padding:14px 20px 22px; border-top:1px solid var(--line); z-index:15; }
+  .sticky-cta button{ width:100%; background:var(--accent); color:#fff; border:none; border-radius:14px;
+    padding:15px; font-size:14.5px; font-weight:800; font-family:'Rubik'; cursor:pointer; }
+  .sticky-cta .sub{ text-align:center; font-size:10.5px; color:var(--muted); margin-top:7px; font-weight:600; }
+
+  .add-topbar{ display:flex; align-items:center; justify-content:space-between; padding:20px 20px 10px; }
+  .add-topbar h2{ font-size:17px; font-weight:900; margin:0; }
+  .add-topbar .save-btn{ background:var(--accent); color:#fff; border:none; border-radius:10px;
+    padding:9px 16px; font-size:13px; font-weight:800; font-family:'Rubik'; cursor:pointer; }
+  .import-banner{ margin:4px 20px 18px; padding:13px 14px; border-radius:14px; background:var(--accent-soft);
+    border-right:4px solid var(--accent); color:#8A4022; font-size:12.5px; font-weight:700; line-height:1.5;
+    display:flex; gap:8px; }
+
+  .photo-drop{ margin:0 20px 22px; height:170px; border-radius:16px; border:1.5px dashed #D8D8D8;
+    background:#FAFAFA; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:6px; cursor:pointer; overflow:hidden; position:relative; }
+  .photo-drop.filled{ border-style:solid; }
+  .photo-drop .photo{ position:absolute; inset:0; background-size:cover; background-position:center; }
+  .photo-drop .scrim{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,0.55) 100%); }
+  .photo-drop .lbl{ font-size:12.5px; font-weight:700; color:var(--muted); z-index:2; }
+  .photo-drop .lbl.on-photo{ color:#fff; position:absolute; bottom:12px; z-index:3; }
+  .photo-drop .req{ position:absolute; top:10px; left:10px; background:var(--accent); color:#fff; font-size:9.5px;
+    font-weight:800; padding:3px 8px; border-radius:20px; z-index:3; }
+  .photo-drop .icon{ font-size:26px; z-index:2; }
+  .photo-drop input[type=file]{ display:none; }
+
+  .form-block{ padding:0 20px 22px; }
+  .form-label{ font-size:12.5px; font-weight:800; margin-bottom:8px; display:flex; align-items:center; gap:5px; }
+  .form-label .opt{ font-size:10.5px; color:var(--muted); font-weight:600; }
+  .form-label .req-star{ color:var(--accent); }
+  .text-input{ width:100%; border:1.5px solid var(--line); border-radius:12px; padding:12px 14px;
+    font-size:14px; font-family:'Rubik'; color:var(--ink); background:#fff; }
+  textarea.text-input{ resize:none; min-height:56px; }
+
+  .chip-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{ padding:9px 15px; border-radius:20px; border:1.5px solid var(--line); font-size:13px; font-weight:700; cursor:pointer; }
+  .chip.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+
+  .ing-form-row{ display:flex; gap:8px; margin-bottom:8px; align-items:center; }
+  .ing-form-row input{ border:1.5px solid var(--line); border-radius:10px; padding:10px; font-size:13px; font-family:'Rubik'; }
+  .ing-form-row .in-amt{ width:60px; text-align:center; }
+  .ing-form-row .in-unit{ width:70px; text-align:center; }
+  .ing-form-row .in-name{ flex:1; min-width:0; }
+  .ing-form-row .rm{ width:30px; height:30px; border-radius:50%; background:#FAFAFA; border:1.5px solid var(--line);
+    color:var(--muted); font-size:14px; flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+  .step-form-row{ display:flex; gap:10px; margin-bottom:10px; align-items:flex-start; }
+  .step-form-row .num{ width:26px;height:26px;border-radius:50%; background:var(--ink); color:#fff; font-size:12px;
+    font-weight:800; display:flex;align-items:center;justify-content:center; flex-shrink:0; margin-top:6px; }
+  .step-form-row textarea{ flex:1; }
+  .step-form-row .rm{ width:30px; height:30px; border-radius:50%; background:#FAFAFA; border:1.5px solid var(--line);
+    color:var(--muted); font-size:14px; flex-shrink:0; cursor:pointer; margin-top:2px; display:flex; align-items:center; justify-content:center; }
+
+  .add-link-btn{ display:flex; align-items:center; justify-content:center; gap:6px; width:100%;
+    font-size:13.5px; font-weight:800; color:var(--accent); background:var(--accent-soft);
+    border:1.5px dashed var(--accent); border-radius:12px; cursor:pointer; padding:11px 0;
+    font-family:'Rubik'; margin-top:2px; }
+
+  .optional-section{ margin:6px 20px 0; padding-top:18px; border-top:1px solid var(--line); }
+  .optional-title{ font-size:12px; font-weight:800; color:var(--muted); margin-bottom:14px; letter-spacing:0.2px; }
+  .two-col{ display:flex; gap:10px; padding:0 20px 6px; }
+  .two-col .form-block{ flex:1; padding:0 0 16px; }
+
+  .login-backdrop{ position:fixed; inset:0; background:#fff; z-index:60; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; padding:30px; text-align:center; }
+  .login-backdrop h2{ font-size:22px; font-weight:900; margin:0 0 6px; }
+  .login-backdrop p{ color:var(--muted); font-size:13.5px; margin:0 0 24px; }
+  .user-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; width:100%; max-width:320px; }
+  .user-btn{ padding:16px 10px; border-radius:16px; border:1.5px solid var(--line); background:#fff;
+    font-family:'Rubik'; font-weight:800; font-size:14px; cursor:pointer; }
+  .user-btn:active{ background:var(--accent-soft); border-color:var(--accent); }
+
+  .spinner{ display:inline-block; width:14px; height:14px; border:2px solid rgba(0,0,0,0.15); border-top-color:var(--accent);
+    border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; margin-left:6px; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+
+<div class="phone">
+
+  <div id="fbErrorBanner" style="display:none; margin:14px 20px 0; padding:12px 14px; border-radius:12px; background:#FDECEC; color:#B42318; font-size:12.5px; font-weight:700; line-height:1.6;"></div>
+
+  <!-- ===================== HOME ===================== -->
+  <div class="view active" id="view-home">
+    <div class="topbar">
+      <div style="width:40px;height:40px;"></div>
+      <div class="brand">המתכונים שלי</div>
+      <div class="icon-btn" onclick="focusSearch()">⌕</div>
+    </div>
+
+    <div class="greeting">
+      <h1>מה מבשלים<br>הערב?</h1>
+      <div class="sub" id="recipeCountSub">טוען מתכונים...</div>
+    </div>
+
+    <div class="search">
+      <span>⌕</span>
+      <input id="searchInput" placeholder="חיפוש מתכון, מרכיב או מקור" oninput="onSearchInput()">
+    </div>
+
+    <div id="searchResultsWrap" style="display:none;">
+      <div class="section-head"><h2>תוצאות חיפוש</h2></div>
+      <div id="searchResults"></div>
+    </div>
+
+    <div id="normalHomeContent">
+      <div class="section-head"><h2>קטגוריות</h2></div>
+      <div class="categories" id="categoriesGrid"></div>
+
+      <div class="section-head"><h2>נוספו לאחרונה</h2></div>
+      <div class="recent-scroll" id="recentScroll"></div>
+    </div>
+  </div>
+
+  <!-- ===================== CATEGORY ===================== -->
+  <div class="view" id="view-category">
+    <div class="hero">
+      <div class="photo" id="cat-hero-photo"></div>
+      <div class="scrim"></div>
+      <div class="topnav">
+        <div class="icon-btn" onclick="showView('home')">→</div>
+        <div class="icon-btn" onclick="toast('אפשר גם לערוך או למחוק קטגוריה כאן בהמשך')">⋯</div>
+      </div>
+      <div class="heroBody">
+        <div class="label" id="cat-hero-label"></div>
+        <div class="count" id="cat-hero-count"></div>
+      </div>
+    </div>
+    <div class="dish-grid" id="dishGrid"></div>
+  </div>
+
+  <!-- ===================== RECIPE ===================== -->
+  <div class="view" id="view-recipe">
+    <div class="recipe-hero">
+      <div class="photo" id="recipe-hero-photo"></div>
+      <div class="scrim"></div>
+      <div class="topnav">
+        <div class="icon-btn" onclick="goBackFromRecipe()">→</div>
+        <div class="icon-btn" onclick="editCurrentRecipe()">✎</div>
+      </div>
+      <div class="titleBox">
+        <span class="src-tag" id="recipe-src-tag"></span>
+        <h1 id="recipe-title"></h1>
+      </div>
+    </div>
+
+    <div class="meta-row" id="recipe-meta-row"></div>
+
+    <div id="recipe-video-wrap"></div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('ing')">מרכיבים</div>
+      <div class="tab" onclick="switchTab('steps')">הכנה</div>
+    </div>
+
+    <div class="ing-list" id="tab-ing"></div>
+    <div class="steps-list" id="tab-steps"></div>
+
+    <button class="finish-btn" onclick="finishRecipe()">✓ סיימתי עם המתכון</button>
+
+    <div style="height:90px;"></div>
+  </div>
+
+  <!-- ===================== ADD / EDIT RECIPE ===================== -->
+  <div class="view" id="view-add">
+    <div class="add-topbar">
+      <div class="icon-btn" onclick="showView('home')">✕</div>
+      <h2 id="add-title">מתכון חדש</h2>
+      <button class="save-btn" onclick="saveRecipe()">שמור</button>
+    </div>
+
+    <div class="import-banner" id="importBanner" style="display:none;">
+      ℹ️ <span id="importBannerText"></span>
+    </div>
+
+    <div class="photo-drop" id="photoDrop" onclick="document.getElementById('photoFile').click()">
+      <span class="req">חובה</span>
+      <span class="icon">📷</span>
+      <span class="lbl">הוספת תמונה ראשית</span>
+      <input type="file" id="photoFile" accept="image/*" onchange="onPhotoSelected(event)">
+    </div>
+
+    <div class="form-block">
+      <div class="form-label"><span class="req-star">*</span> שם המתכון</div>
+      <input class="text-input" id="f-name" placeholder="לדוגמה: פסטה ברוטב שמנת">
+    </div>
+
+    <div class="form-block">
+      <div class="form-label"><span class="req-star">*</span> קטגוריה</div>
+      <div class="chip-row" id="categoryChips"></div>
+    </div>
+
+    <div class="form-block">
+      <div class="form-label"><span class="req-star">*</span> מרכיבים</div>
+      <div id="ingFormList"></div>
+      <button class="add-link-btn" type="button" onclick="addIngRow()">＋ הוסף מרכיב</button>
+    </div>
+
+    <div class="form-block">
+      <div class="form-label"><span class="req-star">*</span> שלבי הכנה</div>
+      <div id="stepFormList"></div>
+      <button class="add-link-btn" type="button" onclick="addStepRow()">＋ הוסף שלב</button>
+    </div>
+
+    <div class="optional-section">
+      <div class="optional-title">פרטים נוספים (אופציונלי)</div>
+
+      <div class="form-block">
+        <div class="form-label">קישור לוידאו <span class="opt">יוטיוב</span></div>
+        <input class="text-input" id="f-video" placeholder="https://www.youtube.com/watch?v=...">
+      </div>
+
+      <div class="two-col">
+        <div class="form-block">
+          <div class="form-label">מנות</div>
+          <input class="text-input" id="f-servings" placeholder="4">
+        </div>
+        <div class="form-block">
+          <div class="form-label">זמן הכנה</div>
+          <input class="text-input" id="f-time" placeholder="25 דק׳">
+        </div>
+        <div class="form-block">
+          <div class="form-label">קושי</div>
+          <input class="text-input" id="f-difficulty" placeholder="קלה">
+        </div>
+      </div>
+
+      <div class="form-block" style="padding-bottom:100px;">
+        <div class="form-label">קישור מקור</div>
+        <input class="text-input" id="f-source" placeholder="https://...">
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="fab-wrap" id="homeFab">
+  <button class="fab" onclick="openSheet()">＋</button>
+</div>
+
+<div class="sticky-cta" id="recipeCta" style="display:none;">
+  <button onclick="addToShoppingList()">הוסף לרשימת הקניות של המשפחה</button>
+  <div class="sub">המרכיבים יתווספו לרשימה המשותפת של כולם</div>
+</div>
+
+<div class="sheet-backdrop" id="sheetBackdrop" onclick="closeSheetIfBackdrop(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h3>הוספת מתכון חדש</h3>
+    <p class="sub">איך תרצה להוסיף את המתכון?</p>
+    <div class="opt" onclick="showAddView('camera')">
+      <div class="ic">📷</div><div class="txt"><div class="t">צילום מתכון</div><div class="d">ספר, מגזין או דף כתוב — נא למלא ידנית לפי הצילום</div></div>
+    </div>
+    <div class="opt" onclick="showAddView('link')">
+      <div class="ic">⇲</div><div class="txt"><div class="t">הדבקת קישור</div><div class="d">אתר בישול, אינסטגרם או טיקטוק</div></div>
+    </div>
+    <div class="opt" onclick="showAddView('manual')">
+      <div class="ic">✎</div><div class="txt"><div class="t">הזנה ידנית</div><div class="d">כותבים את המתכון בעצמכם</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="linkSheetBackdrop" onclick="closeLinkSheetIfBackdrop(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h3>הדבקת קישור למתכון</h3>
+    <p class="sub">מאתר בישול, אינסטגרם או טיקטוק</p>
+    <input class="text-input" id="importUrlInput" placeholder="https://..." style="margin-bottom:14px;">
+    <button class="add-link-btn" style="border-style:solid;" onclick="runImport()">ייבא מתכון<span id="importSpinner" style="display:none;" class="spinner"></span></button>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="newCatBackdrop" onclick="closeNewCatIfBackdrop(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h3>קטגוריה חדשה</h3>
+    <input class="text-input" id="newCatInput" placeholder="שם הקטגוריה" style="margin-bottom:14px;">
+    <button class="add-link-btn" style="border-style:solid;" onclick="createNewCategory()">צור קטגוריה</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, set, update, push, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const cfg = {
+  apiKey: "AIzaSyDoswrdSLhanCMX0KCuIW--MmxrI5KwCYM",
+  authDomain: "shopinglistfamily.firebaseapp.com",
+  databaseURL: "https://shopinglistfamily-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "shopinglistfamily",
+  storageBucket: "shopinglistfamily.firebasestorage.app",
+  messagingSenderId: "171228356891",
+  appId: "1:171228356891:web:f0dc0cae41acc3e1d533be"
+};
+const app = initializeApp(cfg);
+const db = getDatabase(app);
+
+const recipesRef = ref(db, "recipes");
+const categoriesRef = ref(db, "categories");
+const shoppingListRef = ref(db, "shoppingList");
+
+window.fbRecipes = {
+  listen(cb){ onValue(recipesRef, s => cb(s.val() || {}), err => { console.error('recipes read error', err); window.dispatchEvent(new CustomEvent('fbError', {detail: 'recipes: ' + err.message})); }); },
+  save(id, data){ return update(ref(db, "recipes/" + id), data); },
+  create(data){ const r = push(recipesRef); return set(r, data).then(()=>r.key); },
+  setAll(id, data){ return set(ref(db, "recipes/" + id), data); },
+  seedIfEmpty(defaults){
+    return get(recipesRef).then(snap => {
+      if (!snap.exists()) return set(recipesRef, defaults);
+    });
+  }
+};
+window.fbCategories = {
+  listen(cb){ onValue(categoriesRef, s => cb(s.val() || {}), err => { console.error('categories read error', err); window.dispatchEvent(new CustomEvent('fbError', {detail: 'categories: ' + err.message})); }); },
+  create(data){ const r = push(categoriesRef); return set(r, data).then(()=>r.key); },
+  seedIfEmpty(defaults){
+    return get(categoriesRef).then(snap => {
+      if (!snap.exists()) return set(categoriesRef, defaults);
+    });
+  }
+};
+window.fbShoppingList = {
+  getOnce(){ return get(shoppingListRef).then(s => s.val() || {}); },
+  update(patch){ return update(shoppingListRef, patch); }
+};
+</script>
+
+<script type="module">
+// ============================================================
+// STATE
+// ============================================================
+const DEFAULT_CATEGORIES = {
+  'cat-mains':   { name: 'עיקריות',       order: 1 },
+  'cat-pizza':   { name: 'פיצות ומאפים',  order: 2 },
+  'cat-dessert': { name: 'קינוחים',        order: 3 },
+  'cat-salad':   { name: 'סלטים ותוספות', order: 4 },
+  'cat-drinks':  { name: 'שייקים ושתייה', order: 5 }
+};
+const DEMO_RECIPES = {
+  'demo-1': { name:'פסטה ברוטב שמנת ופטריות', categoryId:'cat-mains', ingredients:[{amount:'250',unit:'גרם',name:'פסטה'},{amount:'200',unit:'מ״ל',name:'שמנת מתוקה'},{amount:'150',unit:'גרם',name:'פטריות'},{amount:'2',unit:'שיניים',name:'שום'}], steps:['לבשל את הפסטה במים רותחים עם מלח עד למידת אלדנטה','לטגן את השום והפטריות בשמן זית עד להזהבה','להוסיף את השמנת ולבשל 3 דקות על אש נמוכה','לערבב עם הפסטה ולהגיש חם'], servings:'4', time:'25 דק׳', difficulty:'קלה', sourceType:'manual', createdAt: Date.now()-500000 },
+  'demo-2': { name:'עוף בתנור עם תפוחי אדמה', categoryId:'cat-mains', ingredients:[{amount:'1',unit:'',name:'עוף שלם'},{amount:'5',unit:'יחידות',name:'תפוחי אדמה'},{amount:'3',unit:'כפות',name:'שמן זית'}], steps:['לתבל את העוף במלח, פלפל ופפריקה','לסדר בתבנית עם תפוחי האדמה החתוכים','לאפות ב-200 מעלות כשעה עד להזהבה'], servings:'5', time:'70 דק׳', difficulty:'בינונית', sourceType:'manual', createdAt: Date.now()-450000 },
+  'demo-3': { name:'פיצה מרגריטה ביתית', categoryId:'cat-pizza', ingredients:[{amount:'1',unit:'',name:'בצק פיצה'},{amount:'150',unit:'גרם',name:'רסק עגבניות'},{amount:'200',unit:'גרם',name:'מוצרלה'},{amount:'',unit:'',name:'עלי בזיליקום'}], steps:['לרדד את הבצק לתבנית','למרוח רסק עגבניות ולפזר מוצרלה','לאפות ב-230 מעלות כ-12 דקות','לפזר בזיליקום טרי לפני ההגשה'], servings:'2', time:'30 דק׳', difficulty:'קלה', sourceType:'manual', createdAt: Date.now()-400000 },
+  'demo-4': { name:'בורקס תפוחי אדמה', categoryId:'cat-pizza', ingredients:[{amount:'1',unit:'חבילה',name:'בצק עלים'},{amount:'4',unit:'יחידות',name:'תפוחי אדמה מבושלים'},{amount:'1',unit:'יחידה',name:'ביצה למריחה'}], steps:['למעוך את תפוחי האדמה ולתבל','לחתוך את הבצק למשולשים ולמלא','למרוח ביצה ולפזר שומשום','לאפות ב-190 מעלות 25 דקות'], servings:'8 יחידות', time:'40 דק׳', difficulty:'קלה', sourceType:'manual', createdAt: Date.now()-350000 },
+  'demo-5': { name:'עוגת שוקולד רכה', categoryId:'cat-dessert', ingredients:[{amount:'200',unit:'גרם',name:'שוקולד מריר'},{amount:'150',unit:'גרם',name:'חמאה'},{amount:'4',unit:'יחידות',name:'ביצים'},{amount:'150',unit:'גרם',name:'סוכר'}], steps:['להמיס שוקולד וחמאה יחד','לטרוף ביצים עם סוכר עד תערובת אוורירית','לערבב הכל בעדינות','לאפות ב-180 מעלות 22 דקות'], servings:'8', time:'40 דק׳', difficulty:'קלה', sourceType:'manual', createdAt: Date.now()-300000 },
+  'demo-6': { name:'עוגיות שוקולד צ׳יפס', categoryId:'cat-dessert', ingredients:[{amount:'250',unit:'גרם',name:'קמח'},{amount:'150',unit:'גרם',name:'חמאה'},{amount:'150',unit:'גרם',name:'שוקולד צ׳יפס'},{amount:'100',unit:'גרם',name:'סוכר חום'}], steps:['לערבב חמאה וסוכר עד קרם','להוסיף קמח ושוקולד צ׳יפס','ליצור כדורים ולשטח מעט','לאפות ב-175 מעלות 12 דקות'], servings:'20 יחידות', time:'30 דק׳', difficulty:'קלה', sourceType:'manual', createdAt: Date.now()-250000 },
+  'demo-7': { name:'סלט יווני קלאסי', categoryId:'cat-salad', ingredients:[{amount:'3',unit:'יחידות',name:'עגבניות'},{amount:'2',unit:'יחידות',name:'מלפפונים'},{amount:'150',unit:'גרם',name:'גבינה בולגרית'},{amount:'0.5',unit:'יחידה',name:'בצל סגול'}], steps:['לחתוך את הירקות לקוביות גדולות','לפזר גבינה בולגרית מעל','לתבל בשמן זית, מלח ואורגנו'], servings:'4', time:'10 דק׳', difficulty:'קלה', sourceType:'manual', createdAt: Date.now()-200000 },
+  'demo-8': { name:'אורז לבן עם ירקות', categoryId:'cat-salad', ingredients:[{amount:'2',unit:'כוסות',name:'אורז'},{amount:'1',unit:'יחידה',name:'גזר'},{amount:'0.5',unit:'כוס',name:'אפונה'}], steps:['לשטוף את האורז','לבשל עם הירקות החתוכים במים רותחים 18 דקות','לתת לנוח מכוסה 5 דקות לפני ההגשה'], servings:'6', time:'25 דק׳', difficulty:'קלה', sourceType:'manual', createdAt: Date.now()-150000 },
+  'demo-9': { name:'שייק בננה ותורמוס חלבון', categoryId:'cat-drinks', ingredients:[{amount:'1',unit:'יחידה',name:'בננה'},{amount:'250',unit:'מ״ל',name:'חלב'},{amount:'1',unit:'כף',name:'אבקת חלבון'}], steps:['לקצוץ את הבננה','לטחון הכל בבלנדר עד אחיד','להגיש קר'], servings:'1', time:'5 דק׳', difficulty:'קלה', sourceType:'manual', createdAt: Date.now()-100000 },
+  'demo-10': { name:'לימונענע קרה', categoryId:'cat-drinks', ingredients:[{amount:'4',unit:'יחידות',name:'לימונים'},{amount:'1',unit:'צרור',name:'נענע'},{amount:'3',unit:'כפות',name:'סוכר'}], steps:['לסחוט את הלימונים','לערבב עם סוכר ומים קרים','להוסיף עלי נענע קצוצים ולהגיש עם קרח'], servings:'6', time:'10 דק׳', difficulty:'קלה', sourceType:'manual', createdAt: Date.now()-50000 }
+};
+const NETLIFY_PARSE_URL = 'https://dror-recipe-app-2026.netlify.app/.netlify/functions/parse-recipe';
+
+let categories = {};
+let recipes = {};
+let recipeFrom = 'home';
+let currentCategoryId = null;
+let currentRecipeId = null;
+let editingRecipeId = null;
+let ingRowCounter = 0;
+
+
+// ---------- איורי קטגוריות (מוטמעים, בלי אינטרנט) ----------
+const ART = {
+ mains: `<rect width="200" height="190" fill="#3E8E7E"/><circle cx="100" cy="82" r="64" fill="#fff"/><circle cx="100" cy="82" r="50" fill="#F4F4F4" stroke="#E2E2E2" stroke-width="2"/><ellipse cx="88" cy="84" rx="28" ry="19" fill="#B5651D"/><ellipse cx="82" cy="78" rx="14" ry="7" fill="#CE8238"/><path d="M72 80 L98 92 M78 74 L104 86" stroke="#7A3F0F" stroke-width="3" stroke-linecap="round"/><rect x="106" y="70" width="18" height="18" rx="5" fill="#F2C94C"/><circle cx="118" cy="98" r="6" fill="#4E9A3A"/><circle cx="108" cy="102" r="6" fill="#4E9A3A"/><circle cx="76" cy="62" r="7" fill="#D9442B"/><rect x="20" y="40" width="5" height="62" rx="2" fill="#fff"/><rect x="176" y="40" width="9" height="62" rx="4" fill="#fff"/>`,
+ pizza: `<rect width="200" height="190" fill="#E14D2A"/><circle cx="100" cy="82" r="64" fill="#E9B567"/><circle cx="100" cy="82" r="55" fill="#D9442B"/><circle cx="100" cy="82" r="50" fill="#F7D774"/><g fill="#B3261E"><circle cx="78" cy="62" r="9"/><circle cx="116" cy="66" r="9"/><circle cx="100" cy="94" r="9"/><circle cx="72" cy="98" r="8"/><circle cx="126" cy="98" r="8"/></g><g fill="#3E8E3A"><ellipse cx="98" cy="62" rx="6" ry="3.5"/><ellipse cx="84" cy="82" rx="6" ry="3.5"/><ellipse cx="120" cy="82" rx="6" ry="3.5"/></g><path d="M100 82 L100 27 M100 82 L153 98 M100 82 L55 114" stroke="#D9442B" stroke-width="2" opacity=".7"/>`,
+ dessert: `<rect width="200" height="190" fill="#C24E86"/><ellipse cx="100" cy="122" rx="70" ry="12" fill="#fff"/><polygon points="45,112 150,112 150,70 45,50" fill="#F2C48D"/><polygon points="45,92 150,92 150,100 45,100" fill="#fff" opacity=".0"/><rect x="45" y="80" width="105" height="9" fill="#fff"/><polygon points="45,50 150,70 130,40" fill="#5B3A29"/><path d="M45 50 Q60 66 75 54 Q90 70 105 58 Q120 74 150 70" fill="#5B3A29"/><circle cx="118" cy="46" r="9" fill="#D61F3A"/><path d="M118 38 Q122 28 130 26" stroke="#3E8E3A" stroke-width="3" fill="none"/>`,
+ salad: `<rect width="200" height="190" fill="#6B8E4E"/><g><circle cx="70" cy="62" r="20" fill="#4E9A3A"/><circle cx="100" cy="52" r="22" fill="#78B84F"/><circle cx="132" cy="62" r="20" fill="#4E9A3A"/><circle cx="85" cy="74" r="16" fill="#9BD061"/><circle cx="116" cy="74" r="16" fill="#78B84F"/></g><circle cx="78" cy="68" r="8" fill="#D9442B"/><circle cx="120" cy="64" r="8" fill="#D9442B"/><circle cx="100" cy="78" r="7" fill="#F28C28"/><circle cx="96" cy="60" r="6" fill="#F5EBC8"/><path d="M30 86 H170 Q166 138 100 138 Q34 138 30 86Z" fill="#fff"/><path d="M40 98 H160" stroke="#E5E5E5" stroke-width="3"/>`,
+ drinks: `<rect width="200" height="190" fill="#4A90A4"/><path d="M62 40 H138 L128 128 Q127 136 118 136 H82 Q73 136 72 128Z" fill="#fff" opacity=".35"/><path d="M66 70 H134 L128 128 Q127 136 118 136 H82 Q73 136 72 128Z" fill="#F28C28"/><rect x="82" y="84" width="20" height="20" rx="4" fill="#fff" opacity=".6"/><rect x="108" y="100" width="18" height="18" rx="4" fill="#fff" opacity=".6"/><rect x="110" y="14" width="8" height="70" rx="4" fill="#E14D2A" transform="rotate(14 114 50)"/><circle cx="62" cy="48" r="16" fill="#F7D774"/><circle cx="62" cy="48" r="11" fill="#FBE9A0"/>`,
+ plate: `<rect width="200" height="190" fill="#5A6ACF"/><circle cx="100" cy="82" r="64" fill="#fff"/><circle cx="100" cy="82" r="48" fill="#F4F4F4" stroke="#E2E2E2" stroke-width="2"/><rect x="22" y="40" width="5" height="62" rx="2" fill="#fff"/><rect x="174" y="40" width="9" height="62" rx="4" fill="#fff"/>`
+};
+function artKeyFor(catId){
+  const m = {'cat-mains':'mains','cat-pizza':'pizza','cat-dessert':'dessert','cat-salad':'salad','cat-drinks':'drinks'};
+  if (m[catId]) return m[catId];
+  const n = ((categories[catId]||{}).name||'');
+  if (/פיצ|מאפ|בצק|לחם/.test(n)) return 'pizza';
+  if (/קינוח|עוג|מתוק/.test(n)) return 'dessert';
+  if (/סלט|תוספ/.test(n)) return 'salad';
+  if (/שייק|שתי|משקה|קוקטייל/.test(n)) return 'drinks';
+  if (/עיקר|בשר|עוף|דג/.test(n)) return 'mains';
+  return 'plate';
+}
+function artStyle(catId){
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 190" preserveAspectRatio="xMidYMid slice">${ART[artKeyFor(catId)]}</svg>`;
+  return `background-image:url('data:image/svg+xml,${encodeURIComponent(svg).replace(/'/g,'%27')}')`;
+}
+function photoStyle(photo, catId){
+  if (photo) return `background-image:url('${photo.replace(/'/g,"%27")}')`;
+  return artStyle(catId);
+}
+
+// ============================================================
+// FIREBASE LISTENERS
+// ============================================================
+window.fbCategories.seedIfEmpty(DEFAULT_CATEGORIES).then(() => {
+  window.fbCategories.listen(data => {
+    categories = data || {};
+    if (document.getElementById('view-home').classList.contains('active')) renderHome();
+    renderCategoryChips();
+  });
+}).catch(err => {
+  console.error('categories seed error', err);
+  window.dispatchEvent(new CustomEvent('fbError', {detail: 'categories seed: ' + err.message}));
+});
+window.fbRecipes.seedIfEmpty(DEMO_RECIPES).catch(err => {
+  console.error('recipes seed error', err);
+  window.dispatchEvent(new CustomEvent('fbError', {detail: 'recipes seed: ' + err.message}));
+});
+window.addEventListener('fbError', (e) => {
+  const banner = document.getElementById('fbErrorBanner');
+  if (banner){
+    banner.style.display = 'block';
+    banner.textContent = '⚠️ שגיאת חיבור ל-Firebase: ' + e.detail + ' — כנראה שצריך לעדכן הרשאות (Rules) בפיירבייס עבור recipes/categories.';
+  }
+});
+window.fbRecipes.listen(data => {
+  recipes = data || {};
+  if (document.getElementById('view-home').classList.contains('active')) renderHome();
+  if (currentCategoryId) renderCategoryView(currentCategoryId, true);
+  if (currentRecipeId) renderRecipeView(currentRecipeId, true);
+});
+
+// ============================================================
+// HOME
+// ============================================================
+function renderHome(){
+  const catCount = Object.keys(categories).length;
+  const recCount = Object.keys(recipes).length;
+  document.getElementById('recipeCountSub').textContent =
+    recCount === 0 ? 'עוד אין כאן מתכונים — בואו נתחיל!' : `${recCount} מתכונים ב-${catCount} קטגוריות`;
+
+  const sortedCats = Object.entries(categories).sort((a,b)=>(a[1].order||0)-(b[1].order||0));
+  const grid = document.getElementById('categoriesGrid');
+  grid.innerHTML = sortedCats.map(([id, cat]) => {
+    const count = Object.values(recipes).filter(r => r.categoryId === id).length;
+    return `<div class="cat-card" onclick="openCategory('${id}')">
+      <div class="photo" style="${artStyle(id)}"></div><div class="scrim"></div>
+      <div class="body"><div class="label">${escapeHtml(cat.name)}</div><div class="count">${count} מתכונים</div></div>
+    </div>`;
+  }).join('') + `<div class="cat-card add-new" onclick="openNewCategorySheet()"><span class="plus">＋</span></div>`;
+
+  const recent = Object.entries(recipes).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0)).slice(0,8);
+  const scroll = document.getElementById('recentScroll');
+  if (recent.length === 0){
+    scroll.innerHTML = `<div class="empty-state" style="margin:0 20px;">עדיין לא נוספו מתכונים. לוחצים על + כדי להוסיף את הראשון.</div>`;
+  } else {
+    scroll.innerHTML = recent.map(([id, r]) => {
+      return `<div class="recipe-card" onclick="openRecipe('${id}')">
+        <div class="thumb" style="${photoStyle(r.photo, r.categoryId)}background-size:cover;background-position:center;"><div class="scrim2"></div></div>
+        <div class="info"><div class="name">${escapeHtml(r.name)}</div><div class="src">${sourceLabel(r)}</div></div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function sourceLabel(r){
+  return (categories[r.categoryId]||{}).name || '';
+}
+
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ============================================================
+// SEARCH
+// ============================================================
+function focusSearch(){ document.getElementById('searchInput').focus(); }
+function onSearchInput(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const wrap = document.getElementById('searchResultsWrap');
+  const normal = document.getElementById('normalHomeContent');
+  if (!q){ wrap.style.display = 'none'; normal.style.display = 'block'; return; }
+  wrap.style.display = 'block'; normal.style.display = 'none';
+  const matches = Object.entries(recipes).filter(([id, r]) => {
+    if ((r.name||'').toLowerCase().includes(q)) return true;
+    if ((r.sourceLink||'').toLowerCase().includes(q)) return true;
+    return (r.ingredients||[]).some(i => (i.name||'').toLowerCase().includes(q));
+  });
+  const box = document.getElementById('searchResults');
+  if (matches.length === 0){
+    box.innerHTML = `<div class="empty-state">לא נמצאו מתכונים תואמים</div>`;
+    return;
+  }
+  box.innerHTML = matches.map(([id, r]) => {
+    return `<div class="list-row" onclick="openRecipe('${id}')">
+      <div class="thumb" style="${photoStyle(r.photo, r.categoryId)}"></div>
+      <div class="info"><div class="name">${escapeHtml(r.name)}</div><div class="meta">${sourceLabel(r)}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// CATEGORY VIEW
+// ============================================================
+function openCategory(id){
+  currentCategoryId = id;
+  renderCategoryView(id);
+  showView('category');
+}
+function renderCategoryView(id){
+  const cat = categories[id];
+  if (!cat) return;
+  const list = Object.entries(recipes).filter(([rid, r]) => r.categoryId === id);
+  document.getElementById('cat-hero-photo').setAttribute('style', artStyle(id));
+  document.getElementById('cat-hero-label').textContent = cat.name;
+  document.getElementById('cat-hero-count').textContent = `${list.length} מתכונים`;
+
+  const grid = document.getElementById('dishGrid');
+  if (list.length === 0){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">אין עדיין מתכונים בקטגוריה הזו</div>`;
+    return;
+  }
+  grid.innerHTML = list.map(([rid, r]) => {
+    return `<div class="dish-tile" onclick="openRecipe('${rid}')">
+      <div class="photo" style="${photoStyle(r.photo, r.categoryId)}"></div><div class="scrim"></div>
+      <div class="name">${escapeHtml(r.name)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// RECIPE VIEW + local checklist
+// ============================================================
+function checklistKey(id){ return 'recipeCheck_' + id; }
+function loadChecklist(id){
+  try { return JSON.parse(localStorage.getItem(checklistKey(id))) || { ing: [], steps: [] }; }
+  catch(e){ return { ing: [], steps: [] }; }
+}
+function saveChecklist(id, cl){
+  localStorage.setItem(checklistKey(id), JSON.stringify(cl));
+}
+
+function activeViewName(){
+  const v = document.querySelector('.view.active');
+  return v ? v.id.replace('view-','') : 'home';
+}
+function goBackFromRecipe(){
+  if (recipeFrom === 'category' && currentCategoryId && categories[currentCategoryId]) showView('category');
+  else showView('home');
+}
+function openRecipe(id){
+  const from = activeViewName();
+  recipeFrom = (from === 'category') ? 'category' : 'home';
+  currentRecipeId = id;
+  renderRecipeView(id);
+  showView('recipe');
+}
+function youTubeEmbedUrl(url){
+  if (!url) return null;
+  let m = url.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([A-Za-z0-9_-]{6,})/);
+  if (m) return `https://www.youtube.com/embed/${m[1]}`;
+  return null;
+}
+function renderRecipeView(id){
+  const r = recipes[id];
+  if (!r) return;
+  document.getElementById('recipe-hero-photo').setAttribute('style', photoStyle(r.photo, r.categoryId));
+  document.getElementById('recipe-src-tag').textContent = sourceLabel(r);
+  document.getElementById('recipe-title').textContent = r.name;
+
+  const meta = [];
+  if (r.servings) meta.push(['מנות', r.servings]);
+  if (r.time) meta.push(['דקות', r.time]);
+  if (r.difficulty) meta.push(['רמת קושי', r.difficulty]);
+  document.getElementById('recipe-meta-row').innerHTML = meta.map(([l,v]) =>
+    `<div class="meta-item"><div class="v">${escapeHtml(v)}</div><div class="l">${l}</div></div>`
+  ).join('');
+
+  const videoWrap = document.getElementById('recipe-video-wrap');
+  const embed = youTubeEmbedUrl(r.video);
+  if (embed){
+    videoWrap.innerHTML = `<div class="video-box"><iframe src="${embed}" allowfullscreen></iframe></div>`;
+  } else if (r.video){
+    videoWrap.innerHTML = `<div class="video-box"><div class="fallback">לא הצלחנו להטמיע את הסרטון כאן.<br><a href="${escapeHtml(r.video)}" target="_blank">פתח את הסרטון בקישור המקורי</a></div></div>`;
+  } else {
+    videoWrap.innerHTML = '';
+  }
+
+  const cl = loadChecklist(id);
+  const ings = r.ingredients || [];
+  document.getElementById('tab-ing').innerHTML = ings.map((ing, i) => {
+    const checked = cl.ing[i] ? 'checked' : '';
+    const amt = [ing.amount, ing.unit].filter(Boolean).join(' ');
+    return `<div class="ing-row ${checked}" onclick="toggleIng('${id}', ${i})">
+      <div class="box">${checked?'✓':''}</div><div class="amt">${escapeHtml(amt)}</div><div class="nm">${escapeHtml(ing.name)}</div>
+    </div>`;
+  }).join('') || `<div class="empty-state">אין מרכיבים רשומים</div>`;
+
+  const steps = r.steps || [];
+  document.getElementById('tab-steps').innerHTML = steps.map((step, i) => {
+    const ns = normalizeStep(step);
+    const checked = cl.steps[i] ? 'checked' : '';
+    const imgHtml = ns.image ? `<img src="${ns.image}" style="width:100%; border-radius:12px; margin-top:8px; display:block;">` : '';
+    return `<div class="step-row ${checked}" onclick="toggleStep('${id}', ${i})">
+      <div class="num">${i+1}</div><div class="box">${checked?'✓':''}</div>
+      <div style="flex:1;"><div class="txt">${escapeHtml(ns.text)}</div>${imgHtml}</div>
+    </div>`;
+  }).join('') || `<div class="empty-state">אין שלבי הכנה רשומים</div>`;
+}
+function toggleIng(id, i){
+  const cl = loadChecklist(id);
+  cl.ing[i] = !cl.ing[i];
+  saveChecklist(id, cl);
+  renderRecipeView(id);
+}
+function toggleStep(id, i){
+  const cl = loadChecklist(id);
+  cl.steps[i] = !cl.steps[i];
+  saveChecklist(id, cl);
+  renderRecipeView(id);
+}
+function finishRecipe(){
+  if (!currentRecipeId) return;
+  localStorage.removeItem(checklistKey(currentRecipeId));
+  renderRecipeView(currentRecipeId);
+  toast('הצ׳קליסט אופס — בתיאבון! 😋');
+}
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('tab-ing').style.display = (name==='ing') ? 'block' : 'none';
+  document.getElementById('tab-steps').style.display = (name==='steps') ? 'block' : 'none';
+}
+
+// ============================================================
+// ADD TO SHOPPING LIST (introspects existing item shape, never overwrites existing items)
+// ============================================================
+let shoppingBusy = false;
+const RECIPE_CAT_NAME = 'מצרכים למתכונים';
+function addToShoppingList(){
+  if (!currentRecipeId || shoppingBusy) return;
+  const r = recipes[currentRecipeId];
+  if (!r || !r.ingredients || r.ingredients.length === 0){ toast('אין מרכיבים להוספה'); return; }
+  shoppingBusy = true;
+  window.fbShoppingList.getOnce().then(list => {
+    // מוצאים את הקטגוריה "מצרכים למתכונים" שיצרת באפליקציית הקניות
+    let catId = null;
+    Object.values(list.catCustom || {}).forEach(arr => {
+      (arr || []).forEach(c => { if (!catId && c && c.name === RECIPE_CAT_NAME) catId = c.id; });
+    });
+    if (!catId){
+      toast('באפליקציית הקניות חסרה קטגוריה בשם "מצרכים למתכונים". צור אותה בהגדרות ונסה שוב');
+      return;
+    }
+    const items = Array.isArray(list.items) ? list.items : [];
+    let nextId = Number(list.nextId) || 1;
+    items.forEach(it => { const m = it && /^i(\d+)$/.exec(it.id || ''); if (m && Number(m[1]) >= nextId) nextId = Number(m[1]) + 1; });
+    let idx = items.length;
+    const patch = {};
+    let added = 0;
+    r.ingredients.forEach(ing => {
+      const amt = [ing.amount, ing.unit].filter(Boolean).join(' ');
+      const note = 'מתכון: ' + r.name + (amt ? ' · ' + amt : '');
+      patch['items/' + (idx++)] = {
+        id: 'i' + (nextId++), name: ing.name, catId: catId, state: 1, qty: 1,
+        note: note, recipe: r.name, addedBy: null, markedBy: null, justAdded: true, image: null
+      };
+      added++;
+    });
+    patch['nextId'] = nextId;
+    return window.fbShoppingList.update(patch).then(() => {
+      toast(`נוספו ${added} מרכיבים לקטגוריה "מצרכים למתכונים"`);
+    });
+  }).catch(err => {
+    console.error(err);
+    toast('משהו השתבש בהוספה לרשימת הקניות');
+  }).finally(() => { shoppingBusy = false; });
+}
+
+// ============================================================
+// ADD / EDIT FORM
+// ============================================================
+let pendingPhotoData = null;
+let selectedCategoryId = null;
+
+function openSheet(){ document.getElementById('sheetBackdrop').classList.add('open'); }
+function closeSheetIfBackdrop(e){ if(e.target.id==='sheetBackdrop'){ e.target.classList.remove('open'); } }
+function closeLinkSheetIfBackdrop(e){ if(e.target.id==='linkSheetBackdrop'){ e.target.classList.remove('open'); } }
+function closeNewCatIfBackdrop(e){ if(e.target.id==='newCatBackdrop'){ e.target.classList.remove('open'); } }
+
+function showAddView(mode){
+  document.getElementById('sheetBackdrop').classList.remove('open');
+  editingRecipeId = null;
+  pendingPhotoData = null;
+  resetForm();
+  const banner = document.getElementById('importBanner');
+  const title = document.getElementById('add-title');
+  if (mode === 'manual'){
+    title.textContent = 'מתכון חדש';
+    banner.style.display = 'none';
+    showView('add');
+  } else if (mode === 'camera'){
+    title.textContent = 'מתכון מצילום';
+    banner.style.display = 'flex';
+    document.getElementById('importBannerText').textContent = 'צלמו את המתכון והזינו כאן את הפרטים לפי מה שכתוב.';
+    showView('add');
+  } else {
+    document.getElementById('importUrlInput').value = '';
+    document.getElementById('linkSheetBackdrop').classList.add('open');
+  }
+}
+function guessCategoryId(title){
+  const t = (title || '').toLowerCase();
+  const KEYWORDS = {
+    'cat-pizza':   ['בורקס','פיצה','מאפה','לחם','ג\'חנון','מלאווח','פשטידה','כיסונים','לחמניה','בצק'],
+    'cat-dessert': ['עוגה','עוגיות','קינוח','מוס','גלידה','שוקולד','טורט','רוגלך','בראוני','פאי מתוק'],
+    'cat-salad':   ['סלט','תוספת','חומוס','טחינה','ירקות'],
+    'cat-drinks':  ['שייק','מיץ','משקה','לימונענע','קוקטייל','סמוזי']
+  };
+  for (const [catId, words] of Object.entries(KEYWORDS)){
+    if (words.some(w => t.includes(w)) && categories[catId]) return catId;
+  }
+  return null;
+}
+function runImport(){
+  const url = document.getElementById('importUrlInput').value.trim();
+  if (!url){ toast('הדבק קישור קודם'); return; }
+  document.getElementById('importSpinner').style.display = 'inline-block';
+  const ctrl = new AbortController(); const tmo = setTimeout(() => ctrl.abort(), 8000);
+  fetch(NETLIFY_PARSE_URL, {
+    signal: ctrl.signal,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url })
+  }).then(res => res.json()).then(data => {
+    clearTimeout(tmo);
+    document.getElementById('importSpinner').style.display = 'none';
+    document.getElementById('linkSheetBackdrop').classList.remove('open');
+    document.getElementById('add-title').textContent = 'מתכון מקישור';
+    document.getElementById('importBanner').style.display = 'flex';
+    const missingBits = [];
+    if (!data.video) missingBits.push('וידאו');
+    document.getElementById('importBannerText').textContent =
+      'מולא אוטומטית מהקישור שהדבקת — תבדוק ותתקן לפני שמירה.' +
+      (missingBits.length ? ` (לא נמצא אוטומטית: ${missingBits.join(', ')} — האתר הזה כנראה לא מפרסם את זה בפורמט שהמערכת החינמית שלנו קוראת. אפשר להוסיף ידנית.)` : '');
+    resetForm();
+    if (data.title) document.getElementById('f-name').value = data.title;
+    if (data.video) document.getElementById('f-video').value = data.video;
+    document.getElementById('f-source').value = url;
+    if (data.image){
+      pendingPhotoData = data.image;
+      setPhotoPreview(data.image);
+    }
+    (data.ingredients || []).forEach(ing => addIngRow(ing.amount, ing.unit, ing.name));
+    (data.steps || []).forEach(step => addStepRow(step));
+    if ((data.ingredients||[]).length === 0) addIngRow();
+    if ((data.steps||[]).length === 0) addStepRow();
+    showView('add');
+  }).catch(() => {
+    document.getElementById('importSpinner').style.display = 'none';
+    clearTimeout(tmo);
+    toast('הקישור נשמר. בחר קטגוריה ומלא את שאר הפרטים ידנית');
+    document.getElementById('linkSheetBackdrop').classList.remove('open');
+    document.getElementById('add-title').textContent = 'מתכון חדש';
+    document.getElementById('importBanner').style.display = 'none';
+    resetForm();
+    document.getElementById('f-source').value = url;
+    showView('add');
+  });
+}
+function resetForm(){
+  pendingPhotoData = null;
+  selectedCategoryId = null;
+  document.getElementById('photoDrop').className = 'photo-drop';
+  document.getElementById('photoDrop').innerHTML =
+    '<span class="req">חובה</span><span class="icon">📷</span><span class="lbl">הוספת תמונה ראשית</span><input type="file" id="photoFile" accept="image/*" onchange="onPhotoSelected(event)">';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-video').value = '';
+  document.getElementById('f-servings').value = '';
+  document.getElementById('f-time').value = '';
+  document.getElementById('f-difficulty').value = '';
+  document.getElementById('f-source').value = '';
+  document.getElementById('ingFormList').innerHTML = '';
+  document.getElementById('stepFormList').innerHTML = '';
+  addIngRow(); addIngRow();
+  addStepRow(); addStepRow();
+  renderCategoryChips();
+}
+function setPhotoPreview(dataUrl){
+  const drop = document.getElementById('photoDrop');
+  drop.className = 'photo-drop filled';
+  drop.innerHTML = `<div class="photo" style="position:absolute;inset:0;background-size:cover;background-position:center;background-image:url('${dataUrl.replace(/'/g,"%27")}')"></div>
+    <div class="scrim"></div><span class="req">חובה</span><span class="lbl on-photo">לחצו כדי להחליף</span>
+    <input type="file" id="photoFile" accept="image/*" onchange="onPhotoSelected(event)">`;
+}
+function onPhotoSelected(e){
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    const img = new Image();
+    img.onload = function(){
+      const maxW = 900;
+      const scale = Math.min(1, maxW / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      pendingPhotoData = dataUrl;
+      setPhotoPreview(dataUrl);
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function renderCategoryChips(){
+  const wrap = document.getElementById('categoryChips');
+  if (!wrap) return;
+  const sorted = Object.entries(categories).sort((a,b)=>(a[1].order||0)-(b[1].order||0));
+  wrap.innerHTML = sorted.map(([id, cat]) =>
+    `<div class="chip ${id===selectedCategoryId?'active':''}" onclick="selectCategoryChip('${id}')">${escapeHtml(cat.name)}</div>`
+  ).join('') + `<div class="chip" onclick="openNewCategorySheet()">＋ חדשה</div>`;
+}
+function selectCategoryChip(id){
+  selectedCategoryId = id;
+  renderCategoryChips();
+}
+function openNewCategorySheet(){
+  document.getElementById('sheetBackdrop').classList.remove('open');
+  document.getElementById('newCatInput').value = '';
+  document.getElementById('newCatBackdrop').classList.add('open');
+}
+function createNewCategory(){
+  const name = document.getElementById('newCatInput').value.trim();
+  if (!name){ toast('הזן שם קטגוריה'); return; }
+  const order = Object.keys(categories).length + 1;
+  window.fbCategories.create({ name, order }).then(id => {
+    selectedCategoryId = id;
+    document.getElementById('newCatBackdrop').classList.remove('open');
+    toast('הקטגוריה נוצרה');
+  });
+}
+function addIngRow(amount, unit, name){
+  const row = document.createElement('div');
+  row.className = 'ing-form-row';
+  row.innerHTML = `<input class="in-amt" placeholder="כמות" value="${escapeHtml(amount||'')}">
+    <input class="in-unit" placeholder="יחידה" value="${escapeHtml(unit||'')}">
+    <input class="in-name" placeholder="שם המרכיב" value="${escapeHtml(name||'')}">
+    <div class="rm" onclick="this.parentElement.remove()">✕</div>`;
+  document.getElementById('ingFormList').appendChild(row);
+}
+function normalizeStep(s){
+  return (typeof s === 'string') ? { text: s, image: null } : { text: s.text || '', image: s.image || null };
+}
+function addStepRow(text, image){
+  const list = document.getElementById('stepFormList');
+  const num = list.children.length + 1;
+  const row = document.createElement('div');
+  row.className = 'step-form-row';
+  row.innerHTML = `<div class="num">${num}</div>
+    <div style="flex:1;">
+      <textarea class="text-input" placeholder="תיאור השלב...">${escapeHtml(text||'')}</textarea>
+      <div class="step-img-row" style="margin-top:6px; display:flex; align-items:center; gap:8px;">
+        <button type="button" class="add-link-btn" style="padding:6px 10px; font-size:11.5px; width:auto; margin:0;" onclick="this.nextElementSibling.click()">📷 תמונה לשלב</button>
+        <input type="file" accept="image/*" style="display:none;" onchange="onStepImageSelected(event, this)">
+        <img class="step-img-preview" src="${image||''}" style="${image? '' : 'display:none;'} height:40px; border-radius:6px;">
+        <span class="step-img-remove" style="${image? '' : 'display:none;'} font-size:11px; color:var(--muted); cursor:pointer;" onclick="removeStepImage(this)">הסר</span>
+      </div>
+    </div>
+    <div class="rm" onclick="removeStepRow(this)">✕</div>`;
+  if (image) row.dataset.image = image;
+  list.appendChild(row);
+}
+function onStepImageSelected(e, inputEl){
+  const file = e.target.files[0];
+  if (!file) return;
+  const row = inputEl.closest('.step-form-row');
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    const img = new Image();
+    img.onload = function(){
+      const maxW = 700;
+      const scale = Math.min(1, maxW / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      row.dataset.image = dataUrl;
+      const preview = row.querySelector('.step-img-preview');
+      preview.src = dataUrl; preview.style.display = '';
+      row.querySelector('.step-img-remove').style.display = '';
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function removeStepImage(btn){
+  const row = btn.closest('.step-form-row');
+  delete row.dataset.image;
+  row.querySelector('.step-img-preview').style.display = 'none';
+  btn.style.display = 'none';
+}
+function removeStepRow(btn){
+  btn.parentElement.remove();
+  document.querySelectorAll('#stepFormList .num').forEach((n,i)=>{ n.textContent = i+1; });
+}
+function editCurrentRecipe(){
+  if (!currentRecipeId) return;
+  const r = recipes[currentRecipeId];
+  editingRecipeId = currentRecipeId;
+  resetForm();
+  document.getElementById('add-title').textContent = 'עריכת מתכון';
+  document.getElementById('importBanner').style.display = 'none';
+  document.getElementById('f-name').value = r.name || '';
+  document.getElementById('f-video').value = r.video || '';
+  document.getElementById('f-servings').value = r.servings || '';
+  document.getElementById('f-time').value = r.time || '';
+  document.getElementById('f-difficulty').value = r.difficulty || '';
+  document.getElementById('f-source').value = r.sourceLink || '';
+  selectedCategoryId = r.categoryId || null;
+  renderCategoryChips();
+  document.getElementById('ingFormList').innerHTML = '';
+  (r.ingredients || []).forEach(i => addIngRow(i.amount, i.unit, i.name));
+  document.getElementById('stepFormList').innerHTML = '';
+  (r.steps || []).forEach(s => { const ns = normalizeStep(s); addStepRow(ns.text, ns.image); });
+  if (r.photo){ pendingPhotoData = r.photo; setPhotoPreview(r.photo); }
+  showView('add');
+}
+function saveRecipe(){
+  const name = document.getElementById('f-name').value.trim();
+  if (!name){ toast('חייבים לתת שם למתכון'); return; }
+  if (!selectedCategoryId){ toast('בחרו לאיזו קטגוריה שייך המתכון'); return; }
+  if (!pendingPhotoData){ toast('חייבים להוסיף תמונה ראשית'); return; }
+
+  const ingredients = Array.from(document.querySelectorAll('#ingFormList .ing-form-row')).map(row => ({
+    amount: row.querySelector('.in-amt').value.trim(),
+    unit: row.querySelector('.in-unit').value.trim(),
+    name: row.querySelector('.in-name').value.trim()
+  })).filter(i => i.name);
+  if (ingredients.length === 0){ toast('הוסיפו לפחות מרכיב אחד'); return; }
+
+  const steps = Array.from(document.querySelectorAll('#stepFormList .step-form-row')).map(row => {
+    const text = row.querySelector('textarea').value.trim();
+    const image = row.dataset.image || null;
+    return text ? { text, image } : null;
+  }).filter(Boolean);
+  if (steps.length === 0){ toast('הוסיפו לפחות שלב הכנה אחד'); return; }
+
+  const data = {
+    name,
+    categoryId: selectedCategoryId,
+    photo: pendingPhotoData,
+    ingredients,
+    steps,
+    createdAt: editingRecipeId ? (recipes[editingRecipeId].createdAt || Date.now()) : Date.now(),
+    sourceType: editingRecipeId ? (recipes[editingRecipeId].sourceType || 'manual') : (document.getElementById('importBanner').style.display === 'flex' ? 'link' : 'manual')
+  };
+  const video = document.getElementById('f-video').value.trim();
+  const servings = document.getElementById('f-servings').value.trim();
+  const time = document.getElementById('f-time').value.trim();
+  const difficulty = document.getElementById('f-difficulty').value.trim();
+  const sourceLink = document.getElementById('f-source').value.trim();
+  if (video) data.video = video;
+  if (servings) data.servings = servings;
+  if (time) data.time = time;
+  if (difficulty) data.difficulty = difficulty;
+  if (sourceLink) data.sourceLink = sourceLink;
+
+  const promise = editingRecipeId
+    ? window.fbRecipes.setAll(editingRecipeId, data)
+    : window.fbRecipes.create(data);
+
+  promise.then((newId) => {
+    toast('המתכון נשמר!');
+    showView('home');
+    if (editingRecipeId){ currentRecipeId = editingRecipeId; }
+    else if (newId){ currentRecipeId = newId; }
+  }).catch(() => {
+    toast('שמירה נכשלה — נסו שוב');
+  });
+}
+
+// ============================================================
+// NAV / MISC
+// ============================================================
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.getElementById('homeFab').style.display = (name==='home') ? 'flex' : 'none';
+  document.getElementById('recipeCta').style.display = (name==='recipe') ? 'block' : 'none';
+  window.scrollTo(0,0);
+}
+function toast(msg){
+  document.getElementById('sheetBackdrop').classList.remove('open');
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(window._tt);
+  window._tt = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+// expose functions used inline in HTML
+Object.assign(window, {
+  goBackFromRecipe, openCategory, openRecipe, toggleIng, toggleStep, finishRecipe,
+  switchTab, addToShoppingList, openSheet, closeSheetIfBackdrop, closeLinkSheetIfBackdrop,
+  closeNewCatIfBackdrop, showAddView, runImport, onPhotoSelected, selectCategoryChip,
+  openNewCategorySheet, createNewCategory, addIngRow, addStepRow, removeStepRow,
+  onStepImageSelected, removeStepImage,
+  editCurrentRecipe, saveRecipe, showView, toast, focusSearch, onSearchInput
+});
+
+showView('home');
+
+// קבלת קישור משיתוף (קיצור דרך באייפון): כתובת-האפליקציה/#import=<קישור>
+function handleIncomingShare(){
+  const h = location.hash || '';
+  let raw = '';
+  if (h.indexOf('#import=') === 0) raw = h.slice(8);
+  else {
+    const p = new URLSearchParams(location.search);
+    raw = p.get('import') || p.get('url') || p.get('text') || '';
+  }
+  if (!raw) return;
+  try { raw = decodeURIComponent(raw); } catch(e) {}
+  const m = raw.match(/https?:\/\/[^\s]+/);
+  history.replaceState(null, '', location.pathname);
+  if (!m) return;
+  document.getElementById('importUrlInput').value = m[0];
+  runImport();
+}
+window.addEventListener('hashchange', handleIncomingShare);
+handleIncomingShare();
+</script>
+</body>
+</html>
