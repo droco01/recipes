@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>המתכונים שלי</title>
+<meta name="app-version" content="20261007-4">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -1301,6 +1302,23 @@ Object.assign(window, {
 });
 
 showView('home');
+
+// ---------- עדכון אוטומטי: אם עלתה גרסה חדשה לאתר, האפליקציה טוענת אותה לבד ----------
+const APP_VERSION = '20261007-4';
+function checkForUpdate(){
+  fetch(location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' })
+    .then(r => r.text()).then(t => {
+      const m = /name="app-version" content="([^"]+)"/.exec(t);
+      if (!m || m[1] === APP_VERSION) return;
+      try { if (sessionStorage.getItem('upd') === m[1]) return; } catch(e) {}
+      if (activeViewName() !== 'home') return;   // לא קופצים באמצע הוספת מתכון
+      try { sessionStorage.setItem('upd', m[1]); } catch(e) {}
+      toast('מתעדכן לגרסה חדשה...');
+      setTimeout(() => location.replace(location.pathname + '?v=' + m[1]), 600);
+    }).catch(() => {});
+}
+setTimeout(checkForUpdate, 1500);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkForUpdate(); });
 
 // קבלת קישור משיתוף (קיצור דרך באייפון): כתובת-האפליקציה/#import=<קישור>
 function handleIncomingShare(){
