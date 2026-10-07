@@ -371,6 +371,11 @@
       ℹ️ <span id="importBannerText"></span>
     </div>
 
+    <div id="scanRef" style="display:none; margin:-6px 20px 16px;">
+      <button type="button" onclick="pickScan()" style="width:100%; border:2px dashed var(--accent); background:#fff; color:var(--accent); font-family:'Rubik'; font-weight:800; font-size:14px; padding:12px; border-radius:14px; cursor:pointer;">📷 צילום / בחירת תמונה של המתכון</button>
+      <img id="scanRefImg" alt="" style="display:none; width:100%; max-height:150px; object-fit:contain; background:#fff; border-radius:12px; margin-top:10px; border:1px solid var(--line);" onclick="this.style.maxHeight = (this.style.maxHeight === 'none' ? '150px' : 'none')">
+    </div>
+
     <div class="photo-drop" id="photoDrop" onclick="document.getElementById('photoFile').click()">
       <span class="req">חובה</span>
       <span class="icon">📷</span>
@@ -549,6 +554,8 @@ const DEMO_RECIPES = {
   'demo-9': { name:'שייק בננה ותורמוס חלבון', categoryId:'cat-drinks', ingredients:[{amount:'1',unit:'יחידה',name:'בננה'},{amount:'250',unit:'מ״ל',name:'חלב'},{amount:'1',unit:'כף',name:'אבקת חלבון'}], steps:['לקצוץ את הבננה','לטחון הכל בבלנדר עד אחיד','להגיש קר'], servings:'1', time:'5 דק׳', difficulty:'קלה', sourceType:'manual', createdAt: Date.now()-100000 },
   'demo-10': { name:'לימונענע קרה', categoryId:'cat-drinks', ingredients:[{amount:'4',unit:'יחידות',name:'לימונים'},{amount:'1',unit:'צרור',name:'נענע'},{amount:'3',unit:'כפות',name:'סוכר'}], steps:['לסחוט את הלימונים','לערבב עם סוכר ומים קרים','להוסיף עלי נענע קצוצים ולהגיש עם קרח'], servings:'6', time:'10 דק׳', difficulty:'קלה', sourceType:'manual', createdAt: Date.now()-50000 }
 };
+const NETLIFY_PARSE_PHOTO_URL = 'https://dror-recipe-app-2026.netlify.app/.netlify/functions/parse-photo';
+let scanUsed = false;
 const NETLIFY_PARSE_URL = 'https://dror-recipe-app-2026.netlify.app/.netlify/functions/parse-recipe';
 
 let categories = {};
@@ -900,7 +907,10 @@ function showAddView(mode){
   document.getElementById('sheetBackdrop').classList.remove('open');
   editingRecipeId = null;
   pendingPhotoData = null;
+  scanUsed = false;
   resetForm();
+  document.getElementById('scanRef').style.display = 'none';
+  document.getElementById('scanRefImg').style.display = 'none';
   const banner = document.getElementById('importBanner');
   const title = document.getElementById('add-title');
   if (mode === 'manual'){
@@ -910,8 +920,10 @@ function showAddView(mode){
   } else if (mode === 'camera'){
     title.textContent = 'מתכון מצילום';
     banner.style.display = 'flex';
-    document.getElementById('importBannerText').textContent = 'צלמו את המתכון והזינו כאן את הפרטים לפי מה שכתוב.';
+    document.getElementById('importBannerText').textContent = 'צלמו את המתכון (או בחרו תמונה מהגלריה) והאפליקציה תנסה לקרוא את המצרכים וההכנה לבד.';
+    document.getElementById('scanRef').style.display = 'block';
     showView('add');
+    pickScan();
   } else {
     document.getElementById('importUrlInput').value = '';
     document.getElementById('linkSheetBackdrop').classList.add('open');
@@ -974,6 +986,73 @@ function runImport(){
     resetForm();
     document.getElementById('f-source').value = url;
     showView('add');
+  });
+}
+function pickScan(){
+  const f = document.getElementById('scanFile');
+  f.value = '';
+  f.click();
+}
+function onScanSelected(e){
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    const img = new Image();
+    img.onload = function(){
+      const maxSide = 1600;
+      const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      const ref = document.getElementById('scanRefImg');
+      ref.src = dataUrl; ref.style.display = 'block';
+      scanUsed = true;
+      analyzeScan(dataUrl);
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function setBanner(text){
+  document.getElementById('importBannerText').textContent = text;
+  document.getElementById('importBanner').style.display = 'flex';
+}
+function analyzeScan(dataUrl){
+  setBanner('⏳ קורא את התמונה... זה לוקח כמה שניות');
+  const ctrl = new AbortController(); const tmo = setTimeout(() => ctrl.abort(), 60000);
+  fetch(NETLIFY_PARSE_PHOTO_URL, {
+    method: 'POST', signal: ctrl.signal,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: dataUrl })
+  }).then(res => res.json()).then(data => {
+    clearTimeout(tmo);
+    const ings = (data.ingredients || []).filter(i => i && i.name);
+    const steps = (data.steps || []).filter(Boolean);
+    if (data.error || (!data.title && ings.length === 0 && steps.length === 0)){
+      setBanner(data.error === 'not_recipe'
+        ? 'לא זיהיתי מתכון בתמונה. נסו לצלם שוב מקרוב ובאור טוב, או מלאו ידנית.'
+        : 'לא הצלחתי לקרוא את התמונה. התמונה מוצגת למעלה לעיון, מלאו ידנית.');
+      return;
+    }
+    if (data.title) document.getElementById('f-name').value = data.title;
+    if (data.servings) document.getElementById('f-servings').value = data.servings;
+    if (data.time) document.getElementById('f-time').value = data.time;
+    if (ings.length){
+      document.getElementById('ingFormList').innerHTML = '';
+      ings.forEach(i => addIngRow(i.amount, i.unit, i.name));
+    }
+    if (steps.length){
+      document.getElementById('stepFormList').innerHTML = '';
+      steps.forEach(st => addStepRow(st));
+    }
+    setBanner('✅ המתכון נקרא מהתמונה. בדקו ותקנו לפני שמירה, ובחרו קטגוריה ותמונה ראשית.');
+  }).catch(() => {
+    clearTimeout(tmo);
+    setBanner('הניתוח האוטומטי לא זמין כרגע. התמונה מוצגת למעלה לעיון, מלאו ידנית.');
+    toast('הניתוח האוטומטי לא זמין כרגע');
   });
 }
 function resetForm(){
@@ -1123,6 +1202,7 @@ function editCurrentRecipe(){
   resetForm();
   document.getElementById('add-title').textContent = 'עריכת מתכון';
   document.getElementById('importBanner').style.display = 'none';
+  document.getElementById('scanRef').style.display = 'none';
   document.getElementById('f-name').value = r.name || '';
   document.getElementById('f-video').value = r.video || '';
   document.getElementById('f-servings').value = r.servings || '';
@@ -1165,7 +1245,7 @@ function saveRecipe(){
     ingredients,
     steps,
     createdAt: editingRecipeId ? (recipes[editingRecipeId].createdAt || Date.now()) : Date.now(),
-    sourceType: editingRecipeId ? (recipes[editingRecipeId].sourceType || 'manual') : (document.getElementById('importBanner').style.display === 'flex' ? 'link' : 'manual')
+    sourceType: editingRecipeId ? (recipes[editingRecipeId].sourceType || 'manual') : (scanUsed ? 'camera' : (document.getElementById('importBanner').style.display === 'flex' ? 'link' : 'manual'))
   };
   const video = document.getElementById('f-video').value.trim();
   const servings = document.getElementById('f-servings').value.trim();
@@ -1214,7 +1294,7 @@ function toast(msg){
 Object.assign(window, {
   goBackFromRecipe, openCategory, openRecipe, toggleIng, toggleStep, finishRecipe,
   switchTab, addToShoppingList, openSheet, closeSheetIfBackdrop, closeLinkSheetIfBackdrop,
-  closeNewCatIfBackdrop, showAddView, runImport, onPhotoSelected, selectCategoryChip,
+  closeNewCatIfBackdrop, showAddView, runImport, onPhotoSelected, pickScan, onScanSelected, selectCategoryChip,
   openNewCategorySheet, createNewCategory, addIngRow, addStepRow, removeStepRow,
   onStepImageSelected, removeStepImage,
   editCurrentRecipe, saveRecipe, showView, toast, focusSearch, onSearchInput
@@ -1242,5 +1322,6 @@ function handleIncomingShare(){
 window.addEventListener('hashchange', handleIncomingShare);
 handleIncomingShare();
 </script>
+<input type="file" id="scanFile" accept="image/*" style="display:none" onchange="onScanSelected(event)">
 </body>
 </html>
