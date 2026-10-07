@@ -16,7 +16,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800;900&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#FFFFFF; --ink:#181818; --muted:#8A8A8A; --line:#EDEDED;
+    --bg:#FAF6F1; --ink:#181818; --muted:#8A8A8A; --line:#EDEDED;
     --accent:#E14D2A; --accent-soft:#FDEEE9;
     --shadow: 0 10px 26px rgba(0,0,0,0.08);
   }
@@ -48,34 +48,47 @@
     opacity:0; transition:all .25s ease; pointer-events:none; z-index:50; max-width:320px; text-align:center; }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
-  .greeting{ padding:14px 20px 20px; }
-  .greeting h1{ font-weight:900; font-size:30px; line-height:1.18; margin:0; letter-spacing:-0.3px; }
-  .greeting .sub{ color:var(--muted); font-size:14.5px; margin-top:6px; font-weight:500; }
-  .search{ margin:0 20px 26px; border:1.5px solid var(--line); border-radius:14px; padding:13px 16px;
-    display:flex; align-items:center; gap:10px; }
-  .search input{ border:none; outline:none; font-family:'Rubik'; font-size:14px; flex:1; background:transparent; color:var(--ink); }
+  .topbar{ padding:22px 20px 4px; }
+  .brand{ display:flex; align-items:center; gap:8px; font-weight:900; font-size:18px; letter-spacing:-.2px; }
+  .brand::before{ content:''; width:10px; height:10px; border-radius:50%; background:var(--accent); display:inline-block; }
+  .greeting{ padding:18px 20px 16px; }
+  .greeting .eyebrow{ font-size:13.5px; font-weight:700; color:var(--accent); margin-bottom:4px; }
+  .greeting h1{ font-weight:900; font-size:32px; line-height:1.1; margin:0; letter-spacing:-0.6px; }
+  .greeting .sub{ color:var(--muted); font-size:14px; margin-top:8px; font-weight:500; }
+  .search{ margin:0 20px 24px; background:#fff; border-radius:999px; padding:14px 18px;
+    display:flex; align-items:center; gap:10px; box-shadow:0 6px 20px rgba(60,40,20,.07); }
+  .search svg{ width:19px; height:19px; flex-shrink:0; stroke:var(--muted); }
+  .search input{ border:none; outline:none; font-family:'Rubik'; font-size:14.5px; flex:1; background:transparent; color:var(--ink); }
   .search input::placeholder{ color:var(--muted); font-weight:500; }
 
-  .categories{ display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:0 20px; margin-bottom:34px; }
-  .cat-card{ position:relative; border-radius:14px; height:190px; overflow:hidden; box-shadow: var(--shadow); cursor:pointer; }
+  .categories{ display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:0 20px; margin-bottom:30px; }
+  .cat-card{ position:relative; border-radius:24px; height:212px; overflow:hidden; background:#E9E2D8;
+    box-shadow:0 14px 30px rgba(60,40,20,.14); cursor:pointer; transition:transform .15s ease; -webkit-tap-highlight-color:transparent; }
+  .cat-card:active{ transform:scale(.97); }
+  .cat-card.hero{ grid-column:1 / -1; height:196px; }
   .cat-card .photo{ position:absolute; inset:0; background-size:cover; background-position:center; }
-  .cat-card .scrim{ position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.82) 100%); }
-  .cat-card .tag{ position:absolute; top:12px; right:12px; font-size:10px; font-weight:800; letter-spacing:0.6px;
-    color:#fff; background:rgba(0,0,0,0.35); padding:4px 9px; border-radius:20px; }
-  .cat-card .body{ position:absolute; right:14px; left:14px; bottom:13px; z-index:2; }
-  .cat-card .label{ font-size:19px; font-weight:900; color:#fff; line-height:1.15; letter-spacing:-0.2px; }
-  .cat-card .count{ font-size:11.5px; color: rgba(255,255,255,0.75); font-weight:600; margin-top:3px; }
-  .cat-card.add-new{ display:flex; align-items:center; justify-content:center; background:#FAFAFA; border:1.5px dashed #D8D8D8; box-shadow:none; }
-  .cat-card.add-new .plus{ font-size:26px; color: var(--muted); font-weight:700; }
+  .cat-card .scrim{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.05) 35%, rgba(0,0,0,.72) 100%); }
+  .cat-card .count{ position:absolute; top:14px; right:14px; z-index:2; font-size:11.5px; font-weight:700; color:#fff;
+    background:rgba(255,255,255,.22); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+    padding:5px 12px; border-radius:999px; }
+  .cat-card .body{ position:absolute; right:16px; left:14px; bottom:14px; z-index:2; display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+  .cat-card .label{ font-size:20px; font-weight:800; color:#fff; line-height:1.15; letter-spacing:-.3px; text-shadow:0 2px 12px rgba(0,0,0,.35); }
+  .cat-card.hero .label{ font-size:24px; }
+  .cat-card .go{ width:34px; height:34px; border-radius:50%; background:#fff; color:var(--ink); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800; }
+  .cat-card.add-new{ grid-column:1 / -1; height:60px; display:flex; align-items:center; justify-content:center; gap:8px;
+    background:transparent; border:2px dashed #DCCFBF; box-shadow:none; border-radius:20px; color:#9A8B78; font-weight:700; font-size:14px; }
+  .cat-card.add-new .plus{ font-size:22px; line-height:1; }
 
-  .recent-scroll{ display:flex; gap:14px; overflow-x:auto; padding:0 20px 4px; }
+  .recent-scroll{ display:flex; gap:14px; overflow-x:auto; padding:0 20px 6px; }
   .recent-scroll::-webkit-scrollbar{display:none;}
-  .recipe-card{ flex:0 0 150px; border-radius:14px; overflow:hidden; box-shadow: var(--shadow); cursor:pointer; }
-  .recipe-card .thumb{ height:104px; position:relative; }
-  .recipe-card .thumb .scrim2{ position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,0.55) 100%); }
+  .recipe-card{ flex:0 0 168px; cursor:pointer; }
+  .recipe-card .thumb{ height:124px; border-radius:20px; position:relative; overflow:hidden; box-shadow:0 10px 22px rgba(60,40,20,.13); background:#E9E2D8; }
+  .recipe-card .thumb .scrim2{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(0,0,0,.35) 100%); }
   .recipe-card .info{ padding:10px 4px 0; }
-  .recipe-card .name{ font-size:13.5px; font-weight:800; margin-bottom:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .recipe-card .src{ font-size:11px; color: var(--muted); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .recipe-card .name{ font-size:14px; font-weight:800; margin-bottom:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .recipe-card .src{ font-size:11.5px; color:var(--accent); font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .credit{ text-align:center; font-size:11px; color:#B5A998; padding:6px 20px 0; }
 
   .family-strip{ margin:0 20px 30px; display:flex; align-items:center; gap:10px; cursor:pointer; }
   .avatar{ width:30px;height:30px;border-radius:50%; display:flex;align-items:center;justify-content:center;
@@ -265,19 +278,21 @@
   <!-- ===================== HOME ===================== -->
   <div class="view active" id="view-home">
     <div class="topbar">
-      <div style="width:40px;height:40px;"></div>
       <div class="brand">המתכונים שלי</div>
-      <div class="icon-btn" onclick="focusSearch()">⌕</div>
+      <div class="icon-btn" onclick="focusSearch()" aria-label="חיפוש">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      </div>
     </div>
 
     <div class="greeting">
-      <h1>מה מבשלים<br>הערב?</h1>
+      <div class="eyebrow" id="greetEyebrow">שלום</div>
+      <h1>מה מבשלים היום?</h1>
       <div class="sub" id="recipeCountSub">טוען מתכונים...</div>
     </div>
 
     <div class="search">
-      <span>⌕</span>
-      <input id="searchInput" placeholder="חיפוש מתכון, מרכיב או מקור" oninput="onSearchInput()">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="searchInput" placeholder="חיפוש מתכון, מרכיב או קטגוריה" oninput="onSearchInput()">
     </div>
 
     <div id="searchResultsWrap" style="display:none;">
@@ -291,6 +306,7 @@
 
       <div class="section-head"><h2>נוספו לאחרונה</h2></div>
       <div class="recent-scroll" id="recentScroll"></div>
+      <div class="credit">תמונות הקטגוריות: Unsplash</div>
     </div>
   </div>
 
@@ -568,9 +584,23 @@ function artStyle(catId){
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 190" preserveAspectRatio="xMidYMid slice">${ART[artKeyFor(catId)]}</svg>`;
   return `background-image:url('data:image/svg+xml,${encodeURIComponent(svg).replace(/'/g,'%27')}')`;
 }
+// תמונות אוכל אמיתיות (Unsplash, שימוש חופשי). אם אין אינטרנט מוצג האיור כגיבוי.
+const PHOTOS = {
+  mains:'photo-1616401616927-3c81de22dfa8',
+  pizza:'photo-1716237389720-2c4fdabf0ac0',
+  dessert:'photo-1650229576497-67e1369cd432',
+  salad:'photo-1505253716362-afaea1d3d1af',
+  drinks:'photo-1483918793747-5adbf82956c4'
+};
+function catPhotoStyle(catId){
+  const p = PHOTOS[artKeyFor(catId)];
+  if (!p) return artStyle(catId);
+  const svgPart = artStyle(catId).replace('background-image:','');
+  return `background-image:url('https://images.unsplash.com/${p}?auto=format&fit=crop&w=800&q=70'),${svgPart}`;
+}
 function photoStyle(photo, catId){
-  if (photo) return `background-image:url('${photo.replace(/'/g,"%27")}')`;
-  return artStyle(catId);
+  if (photo) return `background-image:url('${photo.replace(/'/g,"%27")}'),${artStyle(catId).replace('background-image:','')}`;
+  return catPhotoStyle(catId);
 }
 
 // ============================================================
@@ -610,18 +640,22 @@ window.fbRecipes.listen(data => {
 function renderHome(){
   const catCount = Object.keys(categories).length;
   const recCount = Object.keys(recipes).length;
+  const hr = new Date().getHours();
+  document.getElementById('greetEyebrow').textContent =
+    hr < 5 ? 'לילה טוב' : hr < 12 ? 'בוקר טוב' : hr < 17 ? 'צהריים טובים' : hr < 21 ? 'ערב טוב' : 'לילה טוב';
   document.getElementById('recipeCountSub').textContent =
     recCount === 0 ? 'עוד אין כאן מתכונים — בואו נתחיל!' : `${recCount} מתכונים ב-${catCount} קטגוריות`;
 
   const sortedCats = Object.entries(categories).sort((a,b)=>(a[1].order||0)-(b[1].order||0));
   const grid = document.getElementById('categoriesGrid');
-  grid.innerHTML = sortedCats.map(([id, cat]) => {
+  grid.innerHTML = sortedCats.map(([id, cat], i) => {
     const count = Object.values(recipes).filter(r => r.categoryId === id).length;
-    return `<div class="cat-card" onclick="openCategory('${id}')">
-      <div class="photo" style="${artStyle(id)}"></div><div class="scrim"></div>
-      <div class="body"><div class="label">${escapeHtml(cat.name)}</div><div class="count">${count} מתכונים</div></div>
+    return `<div class="cat-card${i === 0 ? ' hero' : ''}" onclick="openCategory('${id}')">
+      <div class="photo" style="${catPhotoStyle(id)}"></div><div class="scrim"></div>
+      <div class="count">${count} מתכונים</div>
+      <div class="body"><div class="label">${escapeHtml(cat.name)}</div><div class="go">←</div></div>
     </div>`;
-  }).join('') + `<div class="cat-card add-new" onclick="openNewCategorySheet()"><span class="plus">＋</span></div>`;
+  }).join('') + `<div class="cat-card add-new" onclick="openNewCategorySheet()"><span class="plus">＋</span> קטגוריה חדשה</div>`;
 
   const recent = Object.entries(recipes).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0)).slice(0,8);
   const scroll = document.getElementById('recentScroll');
@@ -685,7 +719,7 @@ function renderCategoryView(id){
   const cat = categories[id];
   if (!cat) return;
   const list = Object.entries(recipes).filter(([rid, r]) => r.categoryId === id);
-  document.getElementById('cat-hero-photo').setAttribute('style', artStyle(id));
+  document.getElementById('cat-hero-photo').setAttribute('style', catPhotoStyle(id));
   document.getElementById('cat-hero-label').textContent = cat.name;
   document.getElementById('cat-hero-count').textContent = `${list.length} מתכונים`;
 
