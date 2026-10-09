@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>המתכונים שלי</title>
-<meta name="app-version" content="20261007-5">
+<meta name="app-version" content="20261007-6">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -308,6 +308,7 @@
       <div class="section-head"><h2>נוספו לאחרונה</h2></div>
       <div class="recent-scroll" id="recentScroll"></div>
       <div class="credit">חלק מתמונות הקטגוריות: Unsplash</div>
+      <div class="credit" style="margin-top:8px;"><a onclick="cleanupRecipeItems()" style="text-decoration:underline; cursor:pointer;">ניקוי מצרכי מתכונים שנכנסו לרשימת הקניות</a></div>
     </div>
   </div>
 
@@ -528,7 +529,8 @@ window.fbCategories = {
 };
 window.fbShoppingList = {
   getOnce(){ return get(shoppingListRef).then(s => s.val() || {}); },
-  update(patch){ return update(shoppingListRef, patch); }
+  update(patch){ return update(shoppingListRef, patch); },
+  setItems(arr){ return set(ref(db, 'shoppingList/items'), arr); }
 };
 </script>
 
@@ -854,13 +856,20 @@ function switchTab(name){
 // ============================================================
 let shoppingBusy = false;
 const RECIPE_CAT_NAME = 'מצרכים למתכונים';
+// כבוי עד שאפליקציית הקניות המתוקנת עולה לאוויר. אפליקציית הקניות הישנה מפזרת לבד
+// כל פריט שנמצא בקטגוריה מותאמת למחלקות אחרות, ולכן אסור לכתוב לה עד שהיא מתוקנת.
+const SHOPPING_APP_FIXED = false;
+
 function addToShoppingList(){
+  if (!SHOPPING_APP_FIXED){
+    toast('הלחצן כבוי עד שאפליקציית הקניות המתוקנת תעלה. שום דבר לא נשלח לרשימה');
+    return;
+  }
   if (!currentRecipeId || shoppingBusy) return;
   const r = recipes[currentRecipeId];
   if (!r || !r.ingredients || r.ingredients.length === 0){ toast('אין מרכיבים להוספה'); return; }
   shoppingBusy = true;
   window.fbShoppingList.getOnce().then(list => {
-    // מוצאים את הקטגוריה "מצרכים למתכונים" שיצרת באפליקציית הקניות
     let catId = null;
     Object.values(list.catCustom || {}).forEach(arr => {
       (arr || []).forEach(c => { if (!catId && c && c.name === RECIPE_CAT_NAME) catId = c.id; });
@@ -875,23 +884,40 @@ function addToShoppingList(){
     let idx = items.length;
     const patch = {};
     let added = 0;
+    // כל מתכון מקבל את המצרכים שלו, גם אם הם כפולים. שם המתכון הוא חלק משם הפריט,
+    // והפריטים של אותו מתכון נכנסים ברצף, כך שרואים אותם מקובצים בקטגוריה.
     r.ingredients.forEach(ing => {
       const amt = [ing.amount, ing.unit].filter(Boolean).join(' ');
-      const note = 'מתכון: ' + r.name + (amt ? ' · ' + amt : '');
+      const label = r.name + ': ' + ing.name + (amt ? ' (' + amt + ')' : '');
       patch['items/' + (idx++)] = {
-        id: 'i' + (nextId++), name: ing.name, catId: catId, state: 1, qty: 1,
-        note: note, recipe: r.name, addedBy: null, markedBy: null, justAdded: true, image: null
+        id: 'i' + (nextId++), name: label, catId: catId, state: 1, qty: 1,
+        note: 'מתכון: ' + r.name, recipe: r.name, addedBy: null, markedBy: null, justAdded: true, image: null
       };
       added++;
     });
     patch['nextId'] = nextId;
     return window.fbShoppingList.update(patch).then(() => {
-      toast(`נוספו ${added} מרכיבים לקטגוריה "מצרכים למתכונים"`);
+      toast(`נוספו ${added} מצרכים של "${r.name}" לקטגוריה "מצרכים למתכונים"`);
     });
   }).catch(err => {
     console.error(err);
     toast('משהו השתבש בהוספה לרשימת הקניות');
   }).finally(() => { shoppingBusy = false; });
+}
+
+// ניקוי: מוחק מרשימת הקניות רק פריטים שנוספו מאפליקציית המתכונים (יש להם שדה "recipe").
+// שאר הרשימה לא נוגעים בה.
+function cleanupRecipeItems(){
+  window.fbShoppingList.getOnce().then(list => {
+    const items = Array.isArray(list.items) ? list.items : [];
+    const isMine = it => it && (it.recipe || (typeof it.note === 'string' && it.note.indexOf('מתכון:') === 0));
+    const mine = items.filter(isMine);
+    if (mine.length === 0){ toast('לא נמצאו ברשימת הקניות פריטים שנוספו מהמתכונים'); return; }
+    const names = mine.slice(0, 8).map(it => it.name).join(', ');
+    if (!confirm('למחוק מרשימת הקניות ' + mine.length + ' פריטים שנוספו מאפליקציית המתכונים?\n\n' + names + (mine.length > 8 ? ' ...' : '') + '\n\nשאר הרשימה לא תשתנה.')) return;
+    const rest = items.filter(it => !isMine(it));
+    return window.fbShoppingList.setItems(rest).then(() => toast('נמחקו ' + mine.length + ' פריטים. שאר הרשימה נשארה כמו שהיא'));
+  }).catch(err => { console.error(err); toast('הניקוי נכשל, שום דבר לא נמחק'); });
 }
 
 // ============================================================
@@ -1294,7 +1320,7 @@ function toast(msg){
 
 // expose functions used inline in HTML
 Object.assign(window, {
-  goBackFromRecipe, openCategory, openRecipe, toggleIng, toggleStep, finishRecipe,
+  cleanupRecipeItems, goBackFromRecipe, openCategory, openRecipe, toggleIng, toggleStep, finishRecipe,
   switchTab, addToShoppingList, openSheet, closeSheetIfBackdrop, closeLinkSheetIfBackdrop,
   closeNewCatIfBackdrop, showAddView, runImport, onPhotoSelected, pickScan, onScanSelected, selectCategoryChip,
   openNewCategorySheet, createNewCategory, addIngRow, addStepRow, removeStepRow,
@@ -1305,7 +1331,7 @@ Object.assign(window, {
 showView('home');
 
 // ---------- עדכון אוטומטי: אם עלתה גרסה חדשה לאתר, האפליקציה טוענת אותה לבד ----------
-const APP_VERSION = '20261007-5';
+const APP_VERSION = '20261007-6';
 function checkForUpdate(){
   fetch(location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text()).then(t => {
