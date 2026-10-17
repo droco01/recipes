@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>המתכונים שלי</title>
-<meta name="app-version" content="20261007-6">
+<meta name="app-version" content="20261017-1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -856,9 +856,9 @@ function switchTab(name){
 // ============================================================
 let shoppingBusy = false;
 const RECIPE_CAT_NAME = 'מצרכים למתכונים';
-// כבוי עד שאפליקציית הקניות המתוקנת עולה לאוויר. אפליקציית הקניות הישנה מפזרת לבד
+// פעיל: מותר לכתוב לרשימה רק אחרי שאפליקציית הקניות המתוקנת עלתה. (היה כבוי עד אז.) אפליקציית הקניות הישנה מפזרת לבד
 // כל פריט שנמצא בקטגוריה מותאמת למחלקות אחרות, ולכן אסור לכתוב לה עד שהיא מתוקנת.
-const SHOPPING_APP_FIXED = false;
+const SHOPPING_APP_FIXED = true;
 
 function addToShoppingList(){
   if (!SHOPPING_APP_FIXED){
@@ -1331,7 +1331,7 @@ Object.assign(window, {
 showView('home');
 
 // ---------- עדכון אוטומטי: אם עלתה גרסה חדשה לאתר, האפליקציה טוענת אותה לבד ----------
-const APP_VERSION = '20261007-6';
+const APP_VERSION = '20261017-1';
 function checkForUpdate(){
   fetch(location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text()).then(t => {
