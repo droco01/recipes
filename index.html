@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>המתכונים שלי</title>
-<meta name="app-version" content="20261019-1">
+<meta name="app-version" content="20261019-2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -379,8 +379,8 @@
     </div>
 
     <div id="scanRef" style="display:none; margin:0 20px 16px;">
-      <button type="button" onclick="openTextSheet()" style="width:100%; margin-bottom:10px; border:2px dashed var(--accent); background:#fff; color:var(--accent); font-family:'Rubik'; font-weight:800; font-size:14px; padding:12px; border-radius:14px; cursor:pointer;">📋 הדבקת טקסט המתכון (כיתוב מהפוסט, בכל שפה)</button>
       <button type="button" onclick="pickScan()" style="width:100%; border:2px dashed var(--accent); background:#fff; color:var(--accent); font-family:'Rubik'; font-weight:800; font-size:14px; padding:12px; border-radius:14px; cursor:pointer;">📷 קריאת המתכון מתמונות (עד 4: מצרכים, הכנה...)</button>
+            <button type="button" onclick="openTextSheet()" style="width:100%; margin-top:10px; border:2px dashed var(--accent); background:#fff; color:var(--accent); font-family:'Rubik'; font-weight:800; font-size:14px; padding:12px; border-radius:14px; cursor:pointer;">📋 הדבקת טקסט המתכון (כיתוב מהפוסט, בכל שפה)</button>
       <img id="scanRefImg" alt="" style="display:none; width:100%; max-height:150px; object-fit:contain; background:#fff; border-radius:12px; margin-top:10px; border:1px solid var(--line);" onclick="this.style.maxHeight = (this.style.maxHeight === 'none' ? '150px' : 'none')">
     </div>
 
@@ -694,7 +694,7 @@ function renderHome(){
   } else {
     scroll.innerHTML = recent.map(([id, r]) => {
       return `<div class="recipe-card" onclick="openRecipe('${id}')">
-        <div class="thumb" style="${photoStyle(r.photo, r.categoryId)}background-size:cover;background-position:center;"><div class="scrim2"></div></div>
+        <div class="thumb" style="${photoStyle(r.photo, r.categoryId)};background-size:cover;background-position:center;"><div class="scrim2"></div></div>
         <div class="info"><div class="name">${escapeHtml(r.name)}</div><div class="src">${sourceLabel(r)}</div></div>
       </div>`;
     }).join('');
@@ -1130,20 +1130,13 @@ function refineImported(data){
 }
 function runAI(text){
   setBanner('⏳ מתרגם לעברית ומסדר את המצרכים וההכנה...');
-  const ctrl = new AbortController(); const tmo = setTimeout(() => ctrl.abort(), 45000);
-  fetch(NETLIFY_PARSE_PHOTO_URL, {
-    method: 'POST', signal: ctrl.signal,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text })
-  }).then(res => res.json()).then(out => {
-    clearTimeout(tmo);
+  callAI({ text }, 60000).then(r => {
+    if (!r.ok){ setBanner('לא הצלחתי לתרגם אוטומטית. סיבה: ' + r.reason + '. אפשר לנסות שוב או למלא ידנית.'); return; }
+    const out = r.data;
     const oi = (out.ingredients || []).filter(i => i && i.name);
     const os = (out.steps || []).filter(Boolean);
     if (out.error === 'not_recipe'){ setBanner('לא זיהיתי מתכון בטקסט. בדקו שהדבקתם את הכיתוב המלא.'); return; }
-    if (out.error || (!oi.length && !os.length)){
-      setBanner('לא הצלחתי לתרגם ולסדר אוטומטית. אפשר לנסות שוב, או למלא ידנית.');
-      return;
-    }
+    if (!oi.length && !os.length){ setBanner('לא נמצאו בטקסט מצרכים או הכנה. אפשר לנסות שוב או למלא ידנית.'); return; }
     if (out.title) document.getElementById('f-name').value = out.title;
     if (out.servings && !document.getElementById('f-servings').value.trim()) document.getElementById('f-servings').value = out.servings;
     if (out.time && !document.getElementById('f-time').value.trim()) document.getElementById('f-time').value = out.time;
@@ -1152,9 +1145,6 @@ function runAI(text){
     document.getElementById('stepFormList').innerHTML = '';
     (os.length ? os : ['']).forEach(st => addStepRow(st));
     setBanner('✅ המתכון תורגם לעברית ומוין למצרכים והכנה. בדקו ותקנו לפני שמירה, ובחרו קטגוריה ותמונה ראשית.');
-  }).catch(() => {
-    clearTimeout(tmo);
-    setBanner('לא הצלחתי לתרגם אוטומטית כרגע. אפשר לנסות שוב, או למלא ידנית.');
   });
 }
 function openTextSheet(){ document.getElementById('textSheetBackdrop').classList.add('open'); }
@@ -1179,7 +1169,7 @@ function showLinkHelpers(url, gotRecipe){
     const banner = document.getElementById('importBanner');
     banner.style.display = 'flex';
     document.getElementById('importBannerText').textContent = videoEmbed(url)
-      ? 'הסרטון והכיתוב מוצגים למטה. אינסטגרם לא מאפשר קריאה אוטומטית של הפוסט. העתיקו את הכיתוב (לחיצה ארוכה על הטקסט, העתק) ולחצו על "הדבקת טקסט המתכון", או צלמו מסך ולחצו על "קריאה מתמונות".'
+      ? 'הסרטון והכיתוב מוצגים למטה. אינסטגרם לא מאפשר קריאה או העתקה של הכיתוב. צלמו מסך של הכיתוב (עד 4 צילומים) ולחצו על "קריאת המתכון מתמונות", והאפליקציה תתרגם ותחלק למצרכים והכנה.'
       : 'לא הצלחתי לקרוא את המתכון מהקישור. אפשר למלא ידנית, או לצלם מסך של המתכון וללחוץ על כפתור קריאת המתכון מתמונות.';
   }
 }
@@ -1222,21 +1212,44 @@ function setBanner(text){
   document.getElementById('importBannerText').textContent = text;
   document.getElementById('importBanner').style.display = 'flex';
 }
-function analyzeScan(urls){
-  setBanner('⏳ קורא ' + (urls.length > 1 ? urls.length + ' תמונות' : 'את התמונה') + '... זה לוקח כמה שניות');
-  const ctrl = new AbortController(); const tmo = setTimeout(() => ctrl.abort(), 60000);
-  fetch(NETLIFY_PARSE_PHOTO_URL, {
+// קריאה לשרת ה-AI. מחזירה {ok, data, reason} כשהסיבה כתובה בעברית ברורה במקרה של כישלון
+function callAI(body, ms){
+  const ctrl = new AbortController(); const tmo = setTimeout(() => ctrl.abort(), ms);
+  return fetch(NETLIFY_PARSE_PHOTO_URL, {
     method: 'POST', signal: ctrl.signal,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image: urls[0], images: urls })
-  }).then(res => res.json()).then(data => {
+    body: JSON.stringify(body)
+  }).then(res => res.text().then(txt => {
     clearTimeout(tmo);
+    let data = null; try { data = JSON.parse(txt); } catch (e) {}
+    if (res.status === 404) return { ok: false, reason: 'הפונקציה parse-photo לא נמצאת בשרת (לא הועלתה או שהבנייה נכשלה)' };
+    if (!data) return { ok: false, reason: 'תשובה לא תקינה מהשרת (קוד ' + res.status + ')' };
+    if (data.errorMessage) return { ok: false, reason: 'השרת קטע את הפעולה: ' + String(data.errorMessage).slice(0, 80) };
+    if (data.error === 'server_not_configured') return { ok: false, reason: 'חסר מפתח Gemini בהגדרות האתר בנטליפיי' };
+    if (data.error === 'ai_failed') return { ok: false, reason: 'Gemini לא ענה: ' + String(data.detail || '').slice(0, 110) };
+    if (data.error === 'bad_image' || data.error === 'bad_request') return { ok: false, reason: 'התמונה לא התקבלה בשרת' };
+    return { ok: true, data };
+  })).catch(err => {
+    clearTimeout(tmo);
+    return { ok: false, reason: err && err.name === 'AbortError' ? 'לא התקבלה תשובה בזמן' : 'אין חיבור לשרת' };
+  });
+}
+function analyzeScan(urls){
+  setBanner('⏳ קורא ' + (urls.length > 1 ? urls.length + ' תמונות' : 'את התמונה') + '... זה לוקח כמה שניות');
+  callAI({ image: urls[0], images: urls }, 90000).then(r => {
+    if (!r.ok){
+      setBanner('לא הצלחתי לקרוא את התמונה. סיבה: ' + r.reason + '. התמונה מוצגת למעלה לעיון, אפשר למלא ידנית.');
+      return;
+    }
+    const data = r.data;
     const ings = (data.ingredients || []).filter(i => i && i.name);
     const steps = (data.steps || []).filter(Boolean);
-    if (data.error || (!data.title && ings.length === 0 && steps.length === 0)){
-      setBanner(data.error === 'not_recipe'
-        ? 'לא זיהיתי מתכון בתמונה. נסו לצלם שוב מקרוב ובאור טוב, או מלאו ידנית.'
-        : 'לא הצלחתי לקרוא את התמונה. התמונה מוצגת למעלה לעיון, מלאו ידנית.');
+    if (data.error === 'not_recipe'){
+      setBanner('לא זיהיתי מתכון בתמונה. נסו לצלם שוב מקרוב ובאור טוב, או מלאו ידנית.');
+      return;
+    }
+    if (!data.title && ings.length === 0 && steps.length === 0){
+      setBanner('ה-AI לא מצא בתמונה מצרכים או הכנה. נסו צילום מסך ברור יותר, או מלאו ידנית.');
       return;
     }
     if (data.title && !document.getElementById('f-name').value.trim()) document.getElementById('f-name').value = data.title;
@@ -1250,11 +1263,7 @@ function analyzeScan(urls){
       document.getElementById('stepFormList').innerHTML = '';
       steps.forEach(st => addStepRow(st));
     }
-    setBanner('✅ המתכון נקרא מהתמונה. בדקו ותקנו לפני שמירה, ובחרו קטגוריה ותמונה ראשית.');
-  }).catch(() => {
-    clearTimeout(tmo);
-    setBanner('הניתוח האוטומטי לא זמין כרגע. התמונה מוצגת למעלה לעיון, מלאו ידנית.');
-    toast('הניתוח האוטומטי לא זמין כרגע');
+    setBanner('✅ המתכון נקרא מהתמונה ותורגם לעברית. בדקו ותקנו לפני שמירה, ובחרו קטגוריה ותמונה ראשית.');
   });
 }
 function resetForm(){
@@ -1507,7 +1516,7 @@ Object.assign(window, {
 showView('home');
 
 // ---------- עדכון אוטומטי: אם עלתה גרסה חדשה לאתר, האפליקציה טוענת אותה לבד ----------
-const APP_VERSION = '20261019-1';
+const APP_VERSION = '20261019-2';
 function checkForUpdate(){
   fetch(location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text()).then(t => {
