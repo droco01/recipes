@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>המתכונים שלי</title>
-<meta name="app-version" content="20261019-2">
+<meta name="app-version" content="20261022-1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -206,6 +206,9 @@
   .add-topbar h2{ font-size:17px; font-weight:900; margin:0; }
   .add-topbar .save-btn{ background:var(--accent); color:#fff; border:none; border-radius:10px;
     padding:9px 16px; font-size:13px; font-weight:800; font-family:'Rubik'; cursor:pointer; }
+  .form-block{ scroll-margin-top:12px; }
+  .flash-block{ animation:flashBlk 2.2s ease; border-radius:14px; }
+  @keyframes flashBlk{ 0%,60%{ background:var(--accent-soft); box-shadow:0 0 0 6px var(--accent-soft); } 100%{ background:transparent; box-shadow:0 0 0 6px transparent; } }
   .import-banner{ margin:4px 20px 18px; padding:13px 14px; border-radius:14px; background:var(--accent-soft);
     border-right:4px solid var(--accent); color:#8A4022; font-size:12.5px; font-weight:700; line-height:1.5;
     display:flex; gap:8px; }
@@ -294,6 +297,7 @@
       <div class="eyebrow" id="greetEyebrow">שלום</div>
       <h1>מה מבשלים היום?</h1>
       <div class="sub" id="recipeCountSub">טוען מתכונים...</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261022-1</div>
     </div>
 
     <div class="search">
@@ -1050,6 +1054,11 @@ function guessCategoryId(title){
   }
   return null;
 }
+function formHasData(){
+  const hasIng = Array.from(document.querySelectorAll('#ingFormList .in-name')).some(x => x.value.trim());
+  const hasStep = Array.from(document.querySelectorAll('#stepFormList textarea')).some(x => x.value.trim());
+  return !!(scanUsed || selectedCategoryId || hasIng || hasStep || (document.getElementById('f-name').value || '').trim());
+}
 function runImport(){
   const url = document.getElementById('importUrlInput').value.trim();
   if (!url){ toast('הדבק קישור קודם'); return; }
@@ -1063,6 +1072,7 @@ function runImport(){
   }).then(res => res.json()).then(data => {
     clearTimeout(tmo);
     document.getElementById('importSpinner').style.display = 'none';
+    if (activeViewName() === 'add' && formHasData()){ document.getElementById('linkSheetBackdrop').classList.remove('open'); toast('הקישור נקלט. הטופס שמילאתם לא נמחק'); return; }
     document.getElementById('linkSheetBackdrop').classList.remove('open');
     document.getElementById('add-title').textContent = 'מתכון מקישור';
     document.getElementById('importBanner').style.display = 'flex';
@@ -1091,6 +1101,7 @@ function runImport(){
   }).catch(() => {
     document.getElementById('importSpinner').style.display = 'none';
     clearTimeout(tmo);
+    if (activeViewName() === 'add' && formHasData()) return;
     toast('הקישור נשמר. בחר קטגוריה ומלא את שאר הפרטים ידנית');
     document.getElementById('linkSheetBackdrop').classList.remove('open');
     document.getElementById('add-title').textContent = 'מתכון חדש';
@@ -1144,7 +1155,8 @@ function runAI(text){
     (oi.length ? oi : [{}]).forEach(i => addIngRow(i.amount, i.unit, i.name));
     document.getElementById('stepFormList').innerHTML = '';
     (os.length ? os : ['']).forEach(st => addStepRow(st));
-    setBanner('✅ המתכון תורגם לעברית ומוין למצרכים והכנה. בדקו ותקנו לפני שמירה, ובחרו קטגוריה ותמונה ראשית.');
+    setBanner('✅ נקראו ' + oi.length + ' מצרכים ו-' + os.length + ' שלבי הכנה ותורגמו לעברית. הם מוצגים למטה: בדקו ותקנו לפני שמירה, ובחרו קטגוריה ותמונה ראשית.');
+    goToResult(oi.length, os.length);
   });
 }
 function openTextSheet(){ document.getElementById('textSheetBackdrop').classList.add('open'); }
@@ -1234,6 +1246,25 @@ function callAI(body, ms){
     return { ok: false, reason: err && err.name === 'AbortError' ? 'לא התקבלה תשובה בזמן' : 'אין חיבור לשרת' };
   });
 }
+// אחרי קריאה מוצלחת: מציג כמה נמצא, גולל למרכיבים ומסמן את המרכיבים וההכנה כדי שיהיה ברור מה הוכנס
+function goToResult(ni, ns){
+  // סופרים מה שבאמת נמצא בטופס (ולא מה שהשרת החזיר), כדי שההודעה תהיה אמיתית
+  const realI = Array.from(document.querySelectorAll('#ingFormList .in-name')).filter(x => x.value.trim()).length;
+  const realS = Array.from(document.querySelectorAll('#stepFormList textarea')).filter(x => x.value.trim()).length;
+  if (!realI && !realS){
+    setBanner('⚠️ השרת ענה אבל שום מצרך או שלב לא נכנס לטופס. נסו שוב, או הדביקו את הטקסט במקום תמונות.');
+    toast('⚠️ לא הוכנס שום מצרך');
+    return;
+  }
+  setBanner('✅ נכנסו לטופס ' + realI + ' מצרכים ו-' + realS + ' שלבי הכנה (בעברית). בדקו ותקנו, בחרו קטגוריה ותמונה ראשית ואז שמרו.');
+  toast('✅ ' + realI + ' מצרכים, ' + realS + ' שלבי הכנה');
+  const ing = document.getElementById('ingFormList').closest('.form-block');
+  const stp = document.getElementById('stepFormList').closest('.form-block');
+  setTimeout(() => {
+    ing.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    [ing, stp].forEach(b => { b.classList.remove('flash-block'); void b.offsetWidth; b.classList.add('flash-block'); });
+  }, 200);
+}
 function analyzeScan(urls){
   setBanner('⏳ קורא ' + (urls.length > 1 ? urls.length + ' תמונות' : 'את התמונה') + '... זה לוקח כמה שניות');
   callAI({ image: urls[0], images: urls }, 90000).then(r => {
@@ -1263,7 +1294,8 @@ function analyzeScan(urls){
       document.getElementById('stepFormList').innerHTML = '';
       steps.forEach(st => addStepRow(st));
     }
-    setBanner('✅ המתכון נקרא מהתמונה ותורגם לעברית. בדקו ותקנו לפני שמירה, ובחרו קטגוריה ותמונה ראשית.');
+    setBanner('✅ נקראו ' + ings.length + ' מצרכים ו-' + steps.length + ' שלבי הכנה ותורגמו לעברית. הם מוצגים למטה: בדקו ותקנו לפני שמירה, ובחרו קטגוריה ותמונה ראשית.');
+    goToResult(ings.length, steps.length);
   });
 }
 function resetForm(){
@@ -1516,7 +1548,7 @@ Object.assign(window, {
 showView('home');
 
 // ---------- עדכון אוטומטי: אם עלתה גרסה חדשה לאתר, האפליקציה טוענת אותה לבד ----------
-const APP_VERSION = '20261019-2';
+const APP_VERSION = '20261022-1';
 function checkForUpdate(){
   fetch(location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text()).then(t => {
