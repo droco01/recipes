@@ -1226,7 +1226,7 @@ function callAI(body, ms){
     if (!data) return { ok: false, reason: 'תשובה לא תקינה מהשרת (קוד ' + res.status + ')' };
     if (data.errorMessage) return { ok: false, reason: 'השרת קטע את הפעולה: ' + String(data.errorMessage).slice(0, 80) };
     if (data.error === 'server_not_configured') return { ok: false, reason: 'חסר מפתח Gemini בהגדרות האתר בנטליפיי' };
-    if (data.error === 'ai_failed') return { ok: false, reason: 'Gemini לא ענה: ' + String(data.detail || '').slice(0, 110) };
+    if (data.error === 'ai_failed') return { ok: false, reason: 'Gemini לא ענה: ' + String(data.detail || '').slice(0, 300) };
     if (data.error === 'bad_image' || data.error === 'bad_request') return { ok: false, reason: 'התמונה לא התקבלה בשרת' };
     return { ok: true, data };
   })).catch(err => {
