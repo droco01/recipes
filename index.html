@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>המתכונים שלי</title>
-<meta name="app-version" content="20261024-6">
+<meta name="app-version" content="20261024-8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -297,7 +297,7 @@
       <div class="eyebrow" id="greetEyebrow">שלום</div>
       <h1>מה מבשלים היום?</h1>
       <div class="sub" id="recipeCountSub">טוען מתכונים...</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261024-6</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261024-8</div>
     </div>
 
     <div class="search">
@@ -1329,24 +1329,42 @@ function setGeminiKey(){
   refreshKeyLabel();
   if (window.fbSettings){
     window.fbSettings.setKey(v)
-      .then(() => toast(v ? '✅ המפתח נשמר ומשותף לכל המשפחה' : 'המפתח נמחק לכולם'))
-      .catch(() => toast('✅ נשמר רק בטלפון הזה (אין הרשאה לשתף)'));
+      .then(() => { try { localStorage.removeItem('geminiKeyLocalOnly'); } catch (e) {} toast(v ? '✅ המפתח נשמר ומשותף לכל המשפחה' : 'המפתח נמחק לכולם'); })
+      .catch(() => { try { localStorage.setItem('geminiKeyLocalOnly', '1'); } catch (e) {} toast('✅ נשמר רק בטלפון הזה (אין הרשאה לשתף)'); });
   } else toast(v ? '✅ המפתח נשמר' : 'המפתח נמחק');
   return !!v;
 }
 // טלפון אחר במשפחה: מושך את המפתח המשותף אוטומטית ושומר אותו אצלו
 function syncSharedKey(){
-  if (getGeminiKey() || !window.fbSettings) return Promise.resolve(false);
+  if (!window.fbSettings) return Promise.resolve(false);
+  try { if (localStorage.getItem('geminiKeyLocalOnly') === '1') return Promise.resolve(false); } catch (e) {}
   return window.fbSettings.getKey().then(k => {
-    if (!k) return false;
+    if (!k || k === getGeminiKey()) return false;
     try { localStorage.setItem('geminiKey', k); } catch (e) {}
     refreshKeyLabel();
+    toast('🔑 התקבל מפתח Gemini משותף');
     return true;
   }).catch(() => false);
 }
 function refreshKeyLabel(){
   const el = document.getElementById('keyLabel');
   if (el) el.textContent = getGeminiKey() ? '🔑 מפתח Gemini מוגדר, משותף למשפחה (לחצו לשינוי)' : '🔑 הגדרת מפתח Gemini (פעם אחת)';
+}
+function quotaInfo(raw){
+  const info = { daily: false, minute: false, zero: false, retry: 0 };
+  try {
+    const j = JSON.parse(raw);
+    ((j.error && j.error.details) || []).forEach(d => {
+      (d.violations || []).forEach(v => {
+        const id = String(v.quotaId || v.quotaMetric || '');
+        if (/PerDay/i.test(id)) info.daily = true;
+        if (/PerMinute/i.test(id)) info.minute = true;
+        if (String(v.quotaValue) === '0') info.zero = true;
+      });
+      if (d.retryDelay) info.retry = parseInt(d.retryDelay) || 0;
+    });
+  } catch (e) {}
+  return info;
 }
 async function callGeminiDirect(body, ms){
   const key = getGeminiKey();
@@ -1357,6 +1375,7 @@ async function callGeminiDirect(body, ms){
   const parts = text ? [{ text: PROMPT_TEXT + '\n\n--- SOURCE TEXT ---\n' + text }]
     : [{ text: PROMPT_IMAGES }, ...imgs.map(i => ({ inline_data: { mime_type: i.mime, data: i.b64 } }))];
   const errs = [];
+  let all429 = true; const q = { daily: false, minute: false, zero: false, retry: 0 };
   for (const model of DIRECT_MODELS) {
     const ctrl = new AbortController(); const tmo = setTimeout(() => ctrl.abort(), ms);
     try {
@@ -1372,6 +1391,7 @@ async function callGeminiDirect(body, ms){
         let msg = raw; try { msg = JSON.parse(raw).error.message; } catch (e) {}
         if (/API key/i.test(msg)) { try { localStorage.removeItem('geminiKey'); } catch (e) {} if (window.fbSettings) window.fbSettings.setKey('').catch(() => {}); refreshKeyLabel(); return { ok: false, reason: 'המפתח לא תקין. הגדירו מפתח חדש (' + String(msg).slice(0, 60) + ')' }; }
         errs.push(model + ' [' + r.status + ']: ' + String(msg).replace(/\s+/g, ' ').slice(0, 80));
+        if (r.status === 429){ const qi = quotaInfo(raw); q.daily = q.daily || qi.daily; q.minute = q.minute || qi.minute; q.zero = q.zero || qi.zero; q.retry = Math.max(q.retry, qi.retry); } else all429 = false;
         continue;
       }
       const j = JSON.parse(raw);
@@ -1380,14 +1400,22 @@ async function callGeminiDirect(body, ms){
       return { ok: true, data: JSON.parse(t.replace(/^```json\s*|```$/g, '')) };
     } catch (e) {
       clearTimeout(tmo);
+      all429 = false;
       errs.push(model + ': ' + (e && e.name === 'AbortError' ? 'לא ענה בזמן' : String(e && e.message || e).slice(0, 60)));
     }
+  }
+  if (all429 && errs.length){
+    let why = 'המכסה החינמית של Gemini נגמרה.';
+    if (q.zero) why = 'לפרויקט של המפתח הזה אין מכסה חינמית למודלים האלה. צרו מפתח בפרויקט חדש ב-aistudio.google.com/apikey.';
+    else if (q.daily) why = 'נגמרה המכסה היומית החינמית של Gemini. היא מתאפסת בבוקר, או צרו מפתח בפרויקט חדש ב-aistudio.google.com/apikey.';
+    else if (q.minute) why = 'יותר מדי בקשות בדקה. חכו דקה' + (q.retry ? ' (בערך ' + q.retry + ' שניות)' : '') + ' ונסו שוב.';
+    return { ok: false, reason: why + ' אל תנסו שוב ושוב, כל ניסיון סופר.' };
   }
   return { ok: false, reason: 'Gemini לא ענה: ' + errs.join(' | ').slice(0, 300) };
 }
 // קריאה לשרת ה-AI. מחזירה {ok, data, reason} כשהסיבה כתובה בעברית ברורה במקרה של כישלון
 function callAI(body, ms, retry){
-  if (getGeminiKey()) return callGeminiDirect(body, ms);
+  if (getGeminiKey()) return syncSharedKey().then(() => callGeminiDirect(body, ms));
   if (retry === undefined) retry = 1;
   const ctrl = new AbortController(); const tmo = setTimeout(() => ctrl.abort(), ms);
   return fetch(NETLIFY_PARSE_PHOTO_URL, {
@@ -1715,11 +1743,12 @@ Object.assign(window, {
 });
 refreshKeyLabel();
 syncSharedKey();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) syncSharedKey(); });
 
 showView('home');
 
 // ---------- עדכון אוטומטי: אם עלתה גרסה חדשה לאתר, האפליקציה טוענת אותה לבד ----------
-const APP_VERSION = '20261024-6';
+const APP_VERSION = '20261024-8';
 function checkForUpdate(){
   fetch(location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text()).then(t => {
