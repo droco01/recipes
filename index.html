@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>המתכונים שלי</title>
-<meta name="app-version" content="20261024-4">
+<meta name="app-version" content="20261024-5">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -297,7 +297,7 @@
       <div class="eyebrow" id="greetEyebrow">שלום</div>
       <h1>מה מבשלים היום?</h1>
       <div class="sub" id="recipeCountSub">טוען מתכונים...</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261024-4</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261024-5</div>
     </div>
 
     <div class="search">
@@ -469,6 +469,7 @@
     <button class="add-link-btn" style="border-style:dashed; margin-bottom:10px;" onclick="smartPaste()">📋 הדבקה מהלוח</button>
     <button class="add-link-btn" id="smartGo" style="border:none; background:var(--accent); color:#fff; font-size:16px; padding:15px 0; margin-bottom:10px;" onclick="smartAdd()">✨ קרא את המתכון והכנס לטופס</button>
     <button class="add-link-btn" style="border-style:dashed; margin-bottom:10px;" onclick="showAddView('camera')">📷 צילום מסך או תמונות של המתכון (עד 4)</button>
+    <div class="sub" style="text-align:center; margin:2px 0 10px; font-size:13px; color:var(--accent); font-weight:700; cursor:pointer;" onclick="setGeminiKey()"><span id="keyLabel">🔑 הגדרת מפתח Gemini (פעם אחת)</span></div>
     <div class="opt" onclick="showAddView('manual')">
       <div class="ic">✎</div><div class="txt"><div class="t">הזנה ידנית</div><div class="d">כותבים את המתכון בעצמכם</div></div>
     </div>
@@ -1285,8 +1286,90 @@ function setBanner(text){
   document.getElementById('importBannerText').textContent = text;
   document.getElementById('importBanner').style.display = 'flex';
 }
+const AI_RULES = `Rules:
+- Write ALL output in natural Hebrew. If the recipe is in another language (Spanish, English, Arabic, Russian, French...), translate it to Hebrew. Use the common Hebrew names of ingredients. Keep brand names as they are.
+- Do NOT invent or add anything that is not in the source. Keep the numbers and amounts as written.
+- Split correctly: "ingredients" holds only the ingredients list; "steps" holds only the preparation steps, in order, without step numbers.
+- Ignore hashtags, emojis, @mentions, "follow me", links and promotional text.
+- Return JSON with: title (recipe name, empty string if none), servings (only if written, else empty), time (only if written, else empty),
+  ingredients: array of {amount, unit, name} (amount = number or fraction as text, unit = measuring unit such as כוס, כף, גרם, name = the ingredient only),
+  steps: array of strings.
+- If the source does not contain a recipe, return {"error":"not_recipe"}.`;
+
+const PROMPT_IMAGES = `You are reading one or more photos or screenshots of a recipe (printed, handwritten, a phone screenshot, or text shown on a video). Several images are parts of the SAME recipe, in order: combine them into one recipe.\n` + AI_RULES;
+const PROMPT_TEXT = `The text below is the raw text of a recipe (a social media caption, a description, a transcript or a rough automatic import), possibly in another language and possibly mixed up. Extract the recipe from it.\n` + AI_RULES;
+
+const AI_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    error: { type: 'STRING' },
+    title: { type: 'STRING' },
+    servings: { type: 'STRING' },
+    time: { type: 'STRING' },
+    ingredients: { type: 'ARRAY', items: { type: 'OBJECT', properties: {
+      amount: { type: 'STRING' }, unit: { type: 'STRING' }, name: { type: 'STRING' } }, required: ['name'] } },
+    steps: { type: 'ARRAY', items: { type: 'STRING' } }
+  }
+};
+
+
+// ===== Gemini ישירות מהאפליקציה (עוקף את Netlify). המפתח נשמר רק בטלפון הזה, לא בקוד ולא ב-GitHub =====
+const DIRECT_MODELS = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
+function getGeminiKey(){ try { return localStorage.getItem('geminiKey') || ''; } catch (e) { return ''; } }
+function setGeminiKey(){
+  const cur = getGeminiKey();
+  const k = prompt('הדביקו כאן את מפתח ה-Gemini (נשמר רק בטלפון הזה).\nאפשר ליצור מפתח חינם ב-aistudio.google.com/apikey' + (cur ? '\n\nכבר מוגדר מפתח. ריק = מחיקה.' : ''), '');
+  if (k === null) return false;
+  const v = k.trim();
+  try { if (v) localStorage.setItem('geminiKey', v); else localStorage.removeItem('geminiKey'); } catch (e) {}
+  refreshKeyLabel();
+  toast(v ? '✅ המפתח נשמר' : 'המפתח נמחק');
+  return !!v;
+}
+function refreshKeyLabel(){
+  const el = document.getElementById('keyLabel');
+  if (el) el.textContent = getGeminiKey() ? '🔑 מפתח Gemini מוגדר (לחצו לשינוי)' : '🔑 הגדרת מפתח Gemini (פעם אחת)';
+}
+async function callGeminiDirect(body, ms){
+  const key = getGeminiKey();
+  const imgs = (Array.isArray(body.images) && body.images.length ? body.images : [body.image]).slice(0, 4)
+    .map(x => /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/s.exec(String(x || ''))).filter(Boolean).map(m => ({ mime: m[1], b64: m[2] }));
+  const text = typeof body.text === 'string' ? body.text.trim().slice(0, 12000) : '';
+  if (!text && !imgs.length) return { ok: false, reason: 'התמונה לא התקבלה' };
+  const parts = text ? [{ text: PROMPT_TEXT + '\n\n--- SOURCE TEXT ---\n' + text }]
+    : [{ text: PROMPT_IMAGES }, ...imgs.map(i => ({ inline_data: { mime_type: i.mime, data: i.b64 } }))];
+  const errs = [];
+  for (const model of DIRECT_MODELS) {
+    const ctrl = new AbortController(); const tmo = setTimeout(() => ctrl.abort(), ms);
+    try {
+      const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + encodeURIComponent(key), {
+        method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts }], generationConfig: Object.assign(
+          { responseMimeType: 'application/json', responseSchema: AI_SCHEMA, temperature: 0.1, maxOutputTokens: 8192 },
+          /^gemini-3/.test(model) ? { thinkingConfig: { thinkingLevel: 'minimal' } } : {}) })
+      });
+      clearTimeout(tmo);
+      const raw = await r.text();
+      if (!r.ok) {
+        let msg = raw; try { msg = JSON.parse(raw).error.message; } catch (e) {}
+        if (/API key/i.test(msg)) { try { localStorage.removeItem('geminiKey'); } catch (e) {} refreshKeyLabel(); return { ok: false, reason: 'המפתח לא תקין. הגדירו מפתח חדש (' + String(msg).slice(0, 60) + ')' }; }
+        errs.push(model + ' [' + r.status + ']: ' + String(msg).replace(/\s+/g, ' ').slice(0, 80));
+        continue;
+      }
+      const j = JSON.parse(raw);
+      const t = ((j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts) || []).map(p => p.text || '').join('').trim();
+      if (!t) { errs.push(model + ': תשובה ריקה'); continue; }
+      return { ok: true, data: JSON.parse(t.replace(/^```json\s*|```$/g, '')) };
+    } catch (e) {
+      clearTimeout(tmo);
+      errs.push(model + ': ' + (e && e.name === 'AbortError' ? 'לא ענה בזמן' : String(e && e.message || e).slice(0, 60)));
+    }
+  }
+  return { ok: false, reason: 'Gemini לא ענה: ' + errs.join(' | ').slice(0, 300) };
+}
 // קריאה לשרת ה-AI. מחזירה {ok, data, reason} כשהסיבה כתובה בעברית ברורה במקרה של כישלון
 function callAI(body, ms, retry){
+  if (getGeminiKey()) return callGeminiDirect(body, ms);
   if (retry === undefined) retry = 1;
   const ctrl = new AbortController(); const tmo = setTimeout(() => ctrl.abort(), ms);
   return fetch(NETLIFY_PARSE_PHOTO_URL, {
@@ -1306,6 +1389,7 @@ function callAI(body, ms, retry){
   })).catch(err => {
     clearTimeout(tmo);
     if (!(err && err.name === 'AbortError') && retry > 0) return callAI(body, ms, retry - 1);
+    if (!(err && err.name === 'AbortError') && !getGeminiKey() && confirm('השרת לא עונה כרגע. להגדיר מפתח Gemini ישירות באפליקציה (פעם אחת) כדי לעקוף אותו?')){ if (setGeminiKey()) return callAI(body, ms, 0); }
     return { ok: false, reason: err && err.name === 'AbortError' ? 'לא התקבלה תשובה בזמן' : 'אין חיבור לשרת (או שהשרת לקח יותר מדי זמן). נסו שוב' };
   });
 }
@@ -1609,13 +1693,14 @@ Object.assign(window, {
   closeNewCatIfBackdrop, showAddView, runImport, onPhotoSelected, pickScan, onScanSelected, openTextSheet, closeTextSheetIfBackdrop, pasteFromClipboard, submitPastedText, refreshVideoPreview, selectCategoryChip,
   openNewCategorySheet, createNewCategory, addIngRow, addStepRow, removeStepRow,
   onStepImageSelected, removeStepImage,
-  editCurrentRecipe, saveRecipe, showView, toast, focusSearch, onSearchInput, smartAdd, smartPaste
+  editCurrentRecipe, saveRecipe, showView, toast, focusSearch, onSearchInput, smartAdd, smartPaste, setGeminiKey
 });
+refreshKeyLabel();
 
 showView('home');
 
 // ---------- עדכון אוטומטי: אם עלתה גרסה חדשה לאתר, האפליקציה טוענת אותה לבד ----------
-const APP_VERSION = '20261024-4';
+const APP_VERSION = '20261024-5';
 function checkForUpdate(){
   fetch(location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text()).then(t => {
