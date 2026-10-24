@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>המתכונים שלי</title>
-<meta name="app-version" content="20261024-9">
+<meta name="app-version" content="20261024-10">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -297,7 +297,7 @@
       <div class="eyebrow" id="greetEyebrow">שלום</div>
       <h1>מה מבשלים היום?</h1>
       <div class="sub" id="recipeCountSub">טוען מתכונים...</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261024-9</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261024-10</div>
     </div>
 
     <div class="search">
@@ -1203,7 +1203,7 @@ function normSteps(arr){
 }
 function emptyAnswerNote(data){
   let raw = ''; try { raw = JSON.stringify(data); } catch (e) {}
-  return '⚠️ ה-AI ענה אבל לא החזיר מצרכים או הכנה. מה שהוא החזיר: ' + raw.slice(0, 220) + '  (שלחו צילום של ההודעה הזו)';
+  return '⚠️ ה-AI ענה אבל לא החזיר מצרכים או הכנה' + (data && data._models ? ' [' + data._models + ']' : '') + '. מה שהוא החזיר: ' + raw.slice(0, 160) + '  (שלחו צילום של ההודעה הזו)';
 }
 function runAI(text){
   setBanner('⏳ מתרגם לעברית ומסדר את המצרכים וההכנה...');
@@ -1298,6 +1298,7 @@ const AI_RULES = `Rules:
 - Return JSON with: title (recipe name, empty string if none), servings (only if written, else empty), time (only if written, else empty),
   ingredients: array of {amount, unit, name} (amount = number or fraction as text, unit = measuring unit such as כוס, כף, גרם, name = the ingredient only),
   steps: array of strings.
+- ALWAYS fill the "ingredients" and "steps" arrays when the source has them (never leave them empty). The title must be SHORT (a few words): if the source has no title, make one from the main dish. No explanations, no extra text.
 - If the source does not contain a recipe, return {"error":"not_recipe"}.`;
 
 const PROMPT_IMAGES = `You are reading one or more photos or screenshots of a recipe (printed, handwritten, a phone screenshot, or text shown on a video). Several images are parts of the SAME recipe, in order: combine them into one recipe.\n` + AI_RULES;
@@ -1313,7 +1314,8 @@ const AI_SCHEMA = {
     ingredients: { type: 'ARRAY', items: { type: 'OBJECT', properties: {
       amount: { type: 'STRING' }, unit: { type: 'STRING' }, name: { type: 'STRING' } }, required: ['name'] } },
     steps: { type: 'ARRAY', items: { type: 'STRING' } }
-  }
+  },
+  required: ['title', 'ingredients', 'steps']
 };
 
 
@@ -1375,7 +1377,7 @@ async function callGeminiDirect(body, ms){
   const parts = text ? [{ text: PROMPT_TEXT + '\n\n--- SOURCE TEXT ---\n' + text }]
     : [{ text: PROMPT_IMAGES }, ...imgs.map(i => ({ inline_data: { mime_type: i.mime, data: i.b64 } }))];
   const errs = [];
-  let any429 = false; const codes = []; const q = { daily: false, minute: false, zero: false, retry: 0 };
+  let lastEmpty = null; let any429 = false; const codes = []; const q = { daily: false, minute: false, zero: false, retry: 0 };
   for (const model of DIRECT_MODELS) {
     const ctrl = new AbortController(); const tmo = setTimeout(() => ctrl.abort(), ms);
     try {
@@ -1383,7 +1385,7 @@ async function callGeminiDirect(body, ms){
         method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts }], generationConfig: Object.assign(
           { responseMimeType: 'application/json', responseSchema: AI_SCHEMA, temperature: 0.1, maxOutputTokens: 8192 },
-          /^gemini-3/.test(model) ? { thinkingConfig: { thinkingLevel: 'minimal' } } : {}) })
+          /^gemini-3/.test(model) ? { thinkingConfig: { thinkingLevel: 'low' } } : {}) })
       });
       clearTimeout(tmo);
       const raw = await r.text();
@@ -1398,7 +1400,15 @@ async function callGeminiDirect(body, ms){
       const j = JSON.parse(raw);
       const t = ((j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts) || []).map(p => p.text || '').join('').trim();
       if (!t) { errs.push(model + ': תשובה ריקה'); continue; }
-      return { ok: true, data: JSON.parse(t.replace(/^```json\s*|```$/g, '')) };
+      const parsedAns = JSON.parse(t.replace(/^```json\s*|```$/g, ''));
+      if (parsedAns.error !== 'not_recipe' && !normIngs(parsedAns.ingredients).length && !normSteps(parsedAns.steps).length){
+        codes.push(model.replace('gemini-', '') + ':ריק');
+        errs.push(model + ': ענה בלי מצרכים והכנה');
+        lastEmpty = parsedAns;
+        continue;
+      }
+      parsedAns._model = model;
+      return { ok: true, data: parsedAns };
     } catch (e) {
       clearTimeout(tmo);
       codes.push(model.replace('gemini-', '') + ':רשת');
@@ -1406,6 +1416,7 @@ async function callGeminiDirect(body, ms){
     }
   }
   const keyTail = ' [מפתח …' + key.slice(-4) + ' | ' + codes.join(', ') + ']';
+  if (lastEmpty && !any429){ lastEmpty._models = codes.join(', '); return { ok: true, data: lastEmpty }; }
   if (any429){
     let why = 'המכסה החינמית של Gemini נגמרה.';
     if (q.zero) why = 'לפרויקט של המפתח הזה אין מכסה חינמית למודלים האלה. צרו מפתח בפרויקט חדש ב-aistudio.google.com/apikey.';
@@ -1750,7 +1761,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) sync
 showView('home');
 
 // ---------- עדכון אוטומטי: אם עלתה גרסה חדשה לאתר, האפליקציה טוענת אותה לבד ----------
-const APP_VERSION = '20261024-9';
+const APP_VERSION = '20261024-10';
 function checkForUpdate(){
   fetch(location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text()).then(t => {
