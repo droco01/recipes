@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>המתכונים שלי</title>
-<meta name="app-version" content="20261024-2">
+<meta name="app-version" content="20261024-3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -231,7 +231,7 @@
   .form-label .opt{ font-size:10.5px; color:var(--muted); font-weight:600; }
   .form-label .req-star{ color:var(--accent); }
   .text-input{ width:100%; border:1.5px solid var(--line); border-radius:12px; padding:12px 14px;
-    font-size:14px; font-family:'Rubik'; color:var(--ink); background:#fff; }
+    font-size:16px; font-family:'Rubik'; color:var(--ink); background:#fff; }
   textarea.text-input{ resize:none; min-height:56px; }
 
   .chip-row{ display:flex; flex-wrap:wrap; gap:8px; }
@@ -297,7 +297,7 @@
       <div class="eyebrow" id="greetEyebrow">שלום</div>
       <h1>מה מבשלים היום?</h1>
       <div class="sub" id="recipeCountSub">טוען מתכונים...</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261024-2</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261024-3</div>
     </div>
 
     <div class="search">
@@ -465,9 +465,9 @@
     <div class="sheet-handle"></div>
     <h3>הוספת מתכון</h3>
     <p class="sub">הדביקו קישור (אתר, אינסטגרם, טיקטוק) או את טקסט המתכון, בכל שפה. האפליקציה תבחר לבד איך לקרוא אותו.</p>
-    <textarea class="text-input" id="smartInput" rows="4" placeholder="הדביקו כאן קישור או טקסט..." style="margin-bottom:10px; resize:vertical;"></textarea>
+    <textarea class="text-input" id="smartInput" rows="4" placeholder="הדביקו כאן קישור או טקסט..." onpaste="setTimeout(smartAdd, 400)" style="margin-bottom:10px; resize:vertical;"></textarea>
     <button class="add-link-btn" style="border-style:dashed; margin-bottom:10px;" onclick="smartPaste()">📋 הדבקה מהלוח</button>
-    <button class="add-link-btn" id="smartGo" style="border-style:solid; margin-bottom:10px;" onclick="smartAdd()">קרא את המתכון</button>
+    <button class="add-link-btn" id="smartGo" style="border:none; background:var(--accent); color:#fff; font-size:16px; padding:15px 0; margin-bottom:10px;" onclick="smartAdd()">✨ קרא את המתכון והכנס לטופס</button>
     <button class="add-link-btn" style="border-style:dashed; margin-bottom:10px;" onclick="showAddView('camera')">📷 צילום מסך או תמונות של המתכון (עד 4)</button>
     <div class="opt" onclick="showAddView('manual')">
       <div class="ic">✎</div><div class="txt"><div class="t">הזנה ידנית</div><div class="d">כותבים את המתכון בעצמכם</div></div>
@@ -1015,12 +1015,15 @@ function closeNewCatIfBackdrop(e){ if(e.target.id==='newCatBackdrop'){ e.target.
 
 function smartPaste(){
   if (!navigator.clipboard || !navigator.clipboard.readText){ toast('אפשר להדביק גם בלחיצה ארוכה בתיבה'); return; }
-  navigator.clipboard.readText().then(t => { document.getElementById('smartInput').value = t; }).catch(() => toast('אפשר להדביק גם בלחיצה ארוכה בתיבה'));
+  navigator.clipboard.readText().then(t => { document.getElementById('smartInput').value = t; setTimeout(smartAdd, 200); }).catch(() => toast('אפשר להדביק גם בלחיצה ארוכה בתיבה'));
 }
 // תיבה אחת: מזהה לבד אם הודבק קישור (נקרא מהאתר) או טקסט מתכון (מתורגם ומסודר ע"י AI)
+let smartBusy = false;
 function smartAdd(){
   const raw = document.getElementById('smartInput').value.trim();
   if (!raw){ toast('הדביקו קישור או טקסט של מתכון'); return; }
+  if (smartBusy) return;
+  smartBusy = true; setTimeout(() => { smartBusy = false; }, 1500);
   const m = raw.match(/https?:\/\/[^\s]+/);
   const rest = m ? raw.replace(m[0], '').trim() : raw;
   const btn = document.getElementById('smartGo');
@@ -1262,7 +1265,8 @@ function setBanner(text){
   document.getElementById('importBanner').style.display = 'flex';
 }
 // קריאה לשרת ה-AI. מחזירה {ok, data, reason} כשהסיבה כתובה בעברית ברורה במקרה של כישלון
-function callAI(body, ms){
+function callAI(body, ms, retry){
+  if (retry === undefined) retry = 1;
   const ctrl = new AbortController(); const tmo = setTimeout(() => ctrl.abort(), ms);
   return fetch(NETLIFY_PARSE_PHOTO_URL, {
     method: 'POST', signal: ctrl.signal,
@@ -1280,7 +1284,8 @@ function callAI(body, ms){
     return { ok: true, data };
   })).catch(err => {
     clearTimeout(tmo);
-    return { ok: false, reason: err && err.name === 'AbortError' ? 'לא התקבלה תשובה בזמן' : 'אין חיבור לשרת' };
+    if (!(err && err.name === 'AbortError') && retry > 0) return callAI(body, ms, retry - 1);
+    return { ok: false, reason: err && err.name === 'AbortError' ? 'לא התקבלה תשובה בזמן' : 'אין חיבור לשרת (או שהשרת לקח יותר מדי זמן). נסו שוב' };
   });
 }
 // אחרי קריאה מוצלחת: מציג כמה נמצא, גולל למרכיבים ומסמן את המרכיבים וההכנה כדי שיהיה ברור מה הוכנס
@@ -1585,7 +1590,7 @@ Object.assign(window, {
 showView('home');
 
 // ---------- עדכון אוטומטי: אם עלתה גרסה חדשה לאתר, האפליקציה טוענת אותה לבד ----------
-const APP_VERSION = '20261024-2';
+const APP_VERSION = '20261024-3';
 function checkForUpdate(){
   fetch(location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text()).then(t => {
