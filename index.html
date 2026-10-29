@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>המתכונים שלי</title>
-<meta name="app-version" content="20261024-10">
+<meta name="app-version" content="20261025-1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -297,7 +297,7 @@
       <div class="eyebrow" id="greetEyebrow">שלום</div>
       <h1>מה מבשלים היום?</h1>
       <div class="sub" id="recipeCountSub">טוען מתכונים...</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261024-10</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261025-1</div>
     </div>
 
     <div class="search">
@@ -470,6 +470,7 @@
     <button class="add-link-btn" id="smartGo" style="border:none; background:var(--accent); color:#fff; font-size:16px; padding:15px 0; margin-bottom:10px;" onclick="smartAdd()">✨ קרא את המתכון והכנס לטופס</button>
     <button class="add-link-btn" style="border-style:dashed; margin-bottom:10px;" onclick="showAddView('camera')">📷 צילום מסך או תמונות של המתכון (עד 4)</button>
     <div class="sub" style="text-align:center; margin:2px 0 10px; font-size:13px; color:var(--accent); font-weight:700; cursor:pointer;" onclick="setGeminiKey()"><span id="keyLabel">🔑 הגדרת מפתח Gemini (פעם אחת)</span></div>
+    <div class="sub" style="text-align:center; margin:-4px 0 10px; font-size:13px; color:var(--accent); font-weight:700; cursor:pointer;" onclick="setServerUrl()"><span id="serverLabel">🌐 הגדרת שרת לקריאת קישורים (פעם אחת)</span></div>
     <div class="opt" onclick="showAddView('manual')">
       <div class="ic">✎</div><div class="txt"><div class="t">הזנה ידנית</div><div class="d">כותבים את המתכון בעצמכם</div></div>
     </div>
@@ -551,7 +552,9 @@ window.fbCategories = {
 };
 window.fbSettings = {
   getKey(){ return get(ref(db, 'appSettings/geminiKey')).then(s => s.val() || ''); },
-  setKey(v){ return set(ref(db, 'appSettings/geminiKey'), v || null); }
+  setKey(v){ return set(ref(db, 'appSettings/geminiKey'), v || null); },
+  getServer(){ return get(ref(db, 'appSettings/serverUrl')).then(s => s.val() || ''); },
+  setServer(v){ return set(ref(db, 'appSettings/serverUrl'), v || null); }
 };
 window.fbShoppingList = {
   getOnce(){ return get(shoppingListRef).then(s => s.val() || {}); },
@@ -1101,11 +1104,11 @@ function runImport(){
   if (!url){ toast('הדבק קישור קודם'); return; }
   document.getElementById('importSpinner').style.display = 'inline-block';
   const ctrl = new AbortController(); const tmo = setTimeout(() => ctrl.abort(), 30000);
-  return fetch(NETLIFY_PARSE_URL, {
+  return fetch(getServerUrl() || NETLIFY_PARSE_URL, {
     signal: ctrl.signal,
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url })
+    body: JSON.stringify({ url, key: getServerUrl() ? getGeminiKey() : undefined })
   }).then(res => res.json()).then(data => {
     clearTimeout(tmo);
     document.getElementById('importSpinner').style.display = 'none';
@@ -1425,6 +1428,33 @@ async function callGeminiDirect(body, ms){
     return { ok: false, reason: why + ' אל תנסו שוב ושוב, כל ניסיון סופר.' + keyTail };
   }
   return { ok: false, reason: 'Gemini לא ענה.' + keyTail + ' ' + errs.join(' | ').slice(0, 200) };
+}
+// ===== שרת קריאת קישורים (Cloudflare Worker). הכתובת נשמרת במסד המשותף, כך שכל הטלפונים מקבלים אותה =====
+function getServerUrl(){ try { return localStorage.getItem('serverUrl') || ''; } catch (e) { return ''; } }
+function refreshServerLabel(){
+  const el = document.getElementById('serverLabel');
+  if (el) el.textContent = getServerUrl() ? '🌐 שרת קישורים מוגדר (לחצו לשינוי)' : '🌐 הגדרת שרת לקריאת קישורים (פעם אחת)';
+}
+function setServerUrl(){
+  const cur = getServerUrl();
+  const k = prompt('הדביקו את הכתובת של השרת מ-Cloudflare (מתחילה ב-https:// ומסתיימת ב-workers.dev)' + (cur ? '\n\nכבר מוגדר שרת. ריק = מחיקה.' : ''), cur);
+  if (k === null) return false;
+  let v = k.trim().replace(/\/+$/, '');
+  if (v && !/^https:\/\/[a-z0-9.-]+\.[a-z]{2,}/i.test(v)){ toast('הכתובת חייבת להתחיל ב-https://'); return false; }
+  try { if (v) localStorage.setItem('serverUrl', v); else localStorage.removeItem('serverUrl'); } catch (e) {}
+  refreshServerLabel();
+  if (window.fbSettings) window.fbSettings.setServer(v).then(() => toast(v ? '✅ השרת נשמר ומשותף לכל המשפחה' : 'השרת נמחק לכולם')).catch(() => toast('✅ נשמר רק בטלפון הזה'));
+  else toast(v ? '✅ השרת נשמר' : 'השרת נמחק');
+  return !!v;
+}
+function syncSharedServer(){
+  if (!window.fbSettings || !window.fbSettings.getServer) return Promise.resolve(false);
+  return window.fbSettings.getServer().then(v => {
+    if (!v || v === getServerUrl()) return false;
+    try { localStorage.setItem('serverUrl', v); } catch (e) {}
+    refreshServerLabel();
+    return true;
+  }).catch(() => false);
 }
 // קריאה לשרת ה-AI. מחזירה {ok, data, reason} כשהסיבה כתובה בעברית ברורה במקרה של כישלון
 function callAI(body, ms, retry){
@@ -1752,16 +1782,18 @@ Object.assign(window, {
   closeNewCatIfBackdrop, showAddView, runImport, onPhotoSelected, pickScan, onScanSelected, openTextSheet, closeTextSheetIfBackdrop, pasteFromClipboard, submitPastedText, refreshVideoPreview, selectCategoryChip,
   openNewCategorySheet, createNewCategory, addIngRow, addStepRow, removeStepRow,
   onStepImageSelected, removeStepImage,
-  editCurrentRecipe, saveRecipe, showView, toast, focusSearch, onSearchInput, smartAdd, smartPaste, setGeminiKey, syncSharedKey
+  editCurrentRecipe, saveRecipe, showView, toast, focusSearch, onSearchInput, smartAdd, smartPaste, setGeminiKey, syncSharedKey, setServerUrl, syncSharedServer
 });
 refreshKeyLabel();
+refreshServerLabel();
 syncSharedKey();
-document.addEventListener('visibilitychange', () => { if (!document.hidden) syncSharedKey(); });
+syncSharedServer();
+document.addEventListener('visibilitychange', () => { if (!document.hidden){ syncSharedKey(); syncSharedServer(); } });
 
 showView('home');
 
 // ---------- עדכון אוטומטי: אם עלתה גרסה חדשה לאתר, האפליקציה טוענת אותה לבד ----------
-const APP_VERSION = '20261024-10';
+const APP_VERSION = '20261025-1';
 function checkForUpdate(){
   fetch(location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text()).then(t => {
