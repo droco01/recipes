@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>המתכונים שלי</title>
-<meta name="app-version" content="20261029-2">
+<meta name="app-version" content="20261029-3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -297,7 +297,7 @@
       <div class="eyebrow" id="greetEyebrow">שלום</div>
       <h1>מה מבשלים היום?</h1>
       <div class="sub" id="recipeCountSub">טוען מתכונים...</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261029-2</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261029-3</div>
     </div>
 
     <div class="search">
@@ -328,7 +328,7 @@
       <div class="scrim"></div>
       <div class="topnav">
         <div class="icon-btn" onclick="showView('home')">→</div>
-        <div class="icon-btn" onclick="toast('אפשר גם לערוך או למחוק קטגוריה כאן בהמשך')">⋯</div>
+        <div class="icon-btn" onclick="openEditCategorySheet(currentCategoryId)" aria-label="עריכת קטגוריה">✎</div>
       </div>
       <div class="heroBody">
         <div class="label" id="cat-hero-label"></div>
@@ -504,11 +504,14 @@
 <div class="sheet-backdrop" id="newCatBackdrop" onclick="closeNewCatIfBackdrop(event)">
   <div class="sheet">
     <div class="sheet-handle"></div>
-    <h3>קטגוריה חדשה</h3>
+    <h3 id="catSheetTitle">קטגוריה חדשה</h3>
     <input class="text-input" id="newCatInput" placeholder="שם הקטגוריה" style="margin-bottom:14px;">
-    <button class="add-link-btn" style="border-style:solid;" onclick="createNewCategory()">צור קטגוריה</button>
+    <div id="catPhotoPreview" onclick="document.getElementById('catPhotoFile').click()" style="height:130px; border-radius:14px; border:2px dashed var(--line); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; color:var(--muted); font-weight:700; cursor:pointer; margin-bottom:8px;">📷 הוספת תמונה ראשית (לא חובה)</div>
+    <div id="catPhotoRemove" onclick="removeCatPhoto()" style="display:none; text-align:center; color:var(--accent); font-weight:700; font-size:13px; margin-bottom:10px; cursor:pointer;">הסרת התמונה</div>
+    <button class="add-link-btn" id="catSaveBtn" style="border-style:solid; margin-top:6px;" onclick="saveCategory()">צור קטגוריה</button>
   </div>
 </div>
+<input type="file" id="catPhotoFile" accept="image/*" style="display:none" onchange="onCatPhotoSelected(event)">
 
 <div class="toast" id="toast"></div>
 
@@ -548,6 +551,7 @@ window.fbRecipes = {
 window.fbCategories = {
   listen(cb){ onValue(categoriesRef, s => cb(s.val() || {}), err => { console.error('categories read error', err); window.dispatchEvent(new CustomEvent('fbError', {detail: 'categories: ' + err.message})); }); },
   create(data){ const r = push(categoriesRef); return set(r, data).then(()=>r.key); },
+  save(id, data){ return update(ref(db, "categories/" + id), data); },
   seedIfEmpty(defaults){
     return get(categoriesRef).then(snap => {
       if (!snap.exists()) return set(categoriesRef, defaults);
@@ -637,6 +641,8 @@ const PHOTOS = {
   drinks:UNS('photo-1483918793747-5adbf82956c4')
 };
 function catPhotoStyle(catId){
+  const own = categories[catId] && categories[catId].photo;
+  if (own) return `background-image:url('${own.replace(/'/g, "%27")}'),${artStyle(catId).replace('background-image:','')}`;
   const p = PHOTOS[artKeyFor(catId)];
   if (!p) return artStyle(catId);
   const svgPart = artStyle(catId).replace('background-image:','');
@@ -654,6 +660,7 @@ window.fbCategories.seedIfEmpty(DEFAULT_CATEGORIES).then(() => {
   window.fbCategories.listen(data => {
     categories = data || {};
     if (document.getElementById('view-home').classList.contains('active')) renderHome();
+    if (document.getElementById('view-category').classList.contains('active') && currentCategoryId) renderCategoryView(currentCategoryId);
     renderCategoryChips();
   });
 }).catch(err => {
@@ -1627,21 +1634,75 @@ function selectCategoryChip(id){
   selectedCategoryId = id;
   renderCategoryChips();
 }
+let editingCategoryId = null;
+let pendingCatPhoto;   // undefined = לא שונה, null = הוסרה, טקסט = תמונה חדשה
+function currentCatPhoto(){
+  if (pendingCatPhoto !== undefined) return pendingCatPhoto;
+  return editingCategoryId && categories[editingCategoryId] ? (categories[editingCategoryId].photo || null) : null;
+}
+function refreshCatPhotoPreview(){
+  const box = document.getElementById('catPhotoPreview');
+  const p = currentCatPhoto();
+  if (p){ box.style.backgroundImage = "url('" + p.replace(/'/g, '%27') + "')"; box.textContent = ''; }
+  else { box.style.backgroundImage = 'none'; box.textContent = '📷 הוספת תמונה ראשית (לא חובה)'; }
+  document.getElementById('catPhotoRemove').style.display = p ? 'block' : 'none';
+}
 function openNewCategorySheet(){
   document.getElementById('sheetBackdrop').classList.remove('open');
+  editingCategoryId = null; pendingCatPhoto = undefined;
+  document.getElementById('catSheetTitle').textContent = 'קטגוריה חדשה';
+  document.getElementById('catSaveBtn').textContent = 'צור קטגוריה';
   document.getElementById('newCatInput').value = '';
+  refreshCatPhotoPreview();
   document.getElementById('newCatBackdrop').classList.add('open');
 }
-function createNewCategory(){
+function openEditCategorySheet(id){
+  const c = categories[id];
+  if (!c) return;
+  editingCategoryId = id; pendingCatPhoto = undefined;
+  document.getElementById('catSheetTitle').textContent = 'עריכת קטגוריה';
+  document.getElementById('catSaveBtn').textContent = 'שמור';
+  document.getElementById('newCatInput').value = c.name || '';
+  refreshCatPhotoPreview();
+  document.getElementById('newCatBackdrop').classList.add('open');
+}
+function onCatPhotoSelected(e){
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    const img = new Image();
+    img.onload = function(){
+      const scale = Math.min(1, 800 / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      pendingCatPhoto = canvas.toDataURL('image/jpeg', 0.7);
+      refreshCatPhotoPreview();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+function removeCatPhoto(){ pendingCatPhoto = null; refreshCatPhotoPreview(); }
+function saveCategory(){
   const name = document.getElementById('newCatInput').value.trim();
   if (!name){ toast('הזן שם קטגוריה'); return; }
-  const order = Object.keys(categories).length + 1;
-  window.fbCategories.create({ name, order }).then(id => {
-    selectedCategoryId = id;
-    document.getElementById('newCatBackdrop').classList.remove('open');
-    toast('הקטגוריה נוצרה');
-  });
+  const done = msg => { document.getElementById('newCatBackdrop').classList.remove('open'); toast(msg); };
+  const fail = err => { console.error(err); toast('השמירה נכשלה. נסו שוב'); };
+  if (editingCategoryId){
+    const upd = { name };
+    if (pendingCatPhoto !== undefined) upd.photo = pendingCatPhoto;   // null מוחק את התמונה
+    window.fbCategories.save(editingCategoryId, upd).then(() => done('הקטגוריה עודכנה')).catch(fail);
+    return;
+  }
+  const data = { name, order: Object.keys(categories).length + 1 };
+  if (pendingCatPhoto) data.photo = pendingCatPhoto;
+  window.fbCategories.create(data).then(id => { selectedCategoryId = id; done('הקטגוריה נוצרה'); }).catch(fail);
 }
+function createNewCategory(){ saveCategory(); }
 function addIngRow(amount, unit, name){
   const row = document.createElement('div');
   row.className = 'ing-form-row';
@@ -1820,7 +1881,7 @@ Object.assign(window, {
   closeNewCatIfBackdrop, showAddView, runImport, onPhotoSelected, pickScan, onScanSelected, openTextSheet, closeTextSheetIfBackdrop, pasteFromClipboard, submitPastedText, refreshVideoPreview, selectCategoryChip,
   openNewCategorySheet, createNewCategory, addIngRow, addStepRow, removeStepRow,
   onStepImageSelected, removeStepImage,
-  editCurrentRecipe, deleteCurrentRecipe, saveRecipe, showView, toast, focusSearch, onSearchInput, smartAdd, smartPaste, setGeminiKey, syncSharedKey, setServerUrl, syncSharedServer
+  editCurrentRecipe, deleteCurrentRecipe, saveRecipe, openEditCategorySheet, saveCategory, onCatPhotoSelected, removeCatPhoto, showView, toast, focusSearch, onSearchInput, smartAdd, smartPaste, setGeminiKey, syncSharedKey, setServerUrl, syncSharedServer
 });
 refreshKeyLabel();
 refreshServerLabel();
@@ -1831,7 +1892,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden){ syn
 showView('home');
 
 // ---------- עדכון אוטומטי: אם עלתה גרסה חדשה לאתר, האפליקציה טוענת אותה לבד ----------
-const APP_VERSION = '20261029-2';
+const APP_VERSION = '20261029-3';
 function checkForUpdate(){
   fetch(location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text()).then(t => {
