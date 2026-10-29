@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>המתכונים שלי</title>
-<meta name="app-version" content="20261025-1">
+<meta name="app-version" content="20261029-2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -297,7 +297,7 @@
       <div class="eyebrow" id="greetEyebrow">שלום</div>
       <h1>מה מבשלים היום?</h1>
       <div class="sub" id="recipeCountSub">טוען מתכונים...</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261025-1</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261029-2</div>
     </div>
 
     <div class="search">
@@ -345,7 +345,10 @@
       <div class="scrim"></div>
       <div class="topnav">
         <div class="icon-btn" onclick="goBackFromRecipe()">→</div>
-        <div class="icon-btn" onclick="editCurrentRecipe()">✎</div>
+        <div style="display:flex; gap:8px;">
+          <div class="icon-btn" onclick="deleteCurrentRecipe()" aria-label="מחיקת מתכון">🗑</div>
+          <div class="icon-btn" onclick="editCurrentRecipe()">✎</div>
+        </div>
       </div>
       <div class="titleBox">
         <span class="src-tag" id="recipe-src-tag"></span>
@@ -512,7 +515,7 @@
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue, set, update, push, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, onValue, set, update, push, get, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const cfg = {
   apiKey: "AIzaSyDoswrdSLhanCMX0KCuIW--MmxrI5KwCYM",
@@ -535,6 +538,7 @@ window.fbRecipes = {
   save(id, data){ return update(ref(db, "recipes/" + id), data); },
   create(data){ const r = push(recipesRef); return set(r, data).then(()=>r.key); },
   setAll(id, data){ return set(ref(db, "recipes/" + id), data); },
+  remove(id){ return remove(ref(db, "recipes/" + id)); },
   seedIfEmpty(defaults){
     return get(recipesRef).then(snap => {
       if (!snap.exists()) return set(recipesRef, defaults);
@@ -1099,9 +1103,29 @@ function formHasData(){
   const hasStep = Array.from(document.querySelectorAll('#stepFormList textarea')).some(x => x.value.trim());
   return !!(scanUsed || selectedCategoryId || hasIng || hasStep || (document.getElementById('f-name').value || '').trim());
 }
+// קישור יוטיוב -> כתובת watch רגילה (או null אם זה לא יוטיוב)
+function ytWatchUrl(url){
+  const m = /(?:youtube\.com\/(?:watch\?(?:[^#\s]*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/i.exec(String(url || ''));
+  return m ? 'https://www.youtube.com/watch?v=' + m[1] : null;
+}
+// סרטון יוטיוב: Gemini צופה בסרטון ומחלץ את המתכון (דורש מפתח Gemini)
+function importYouTube(url){
+  if (!getGeminiKey()){
+    if (!confirm('כדי לקרוא מתכון מסרטון יוטיוב צריך מפתח Gemini. להגדיר עכשיו?')) return;
+    if (!setGeminiKey()) return;
+  }
+  document.getElementById('linkSheetBackdrop').classList.remove('open');
+  showAddView('manual');
+  document.getElementById('add-title').textContent = 'מתכון מיוטיוב';
+  document.getElementById('f-source').value = url;
+  document.getElementById('f-video').value = url;
+  refreshVideoPreview();
+  runAI(null, { youtube: ytWatchUrl(url) });
+}
 function runImport(){
   const url = document.getElementById('importUrlInput').value.trim();
   if (!url){ toast('הדבק קישור קודם'); return; }
+  if (ytWatchUrl(url)){ importYouTube(url); return; }
   document.getElementById('importSpinner').style.display = 'inline-block';
   const ctrl = new AbortController(); const tmo = setTimeout(() => ctrl.abort(), 30000);
   return fetch(getServerUrl() || NETLIFY_PARSE_URL, {
@@ -1208,14 +1232,14 @@ function emptyAnswerNote(data){
   let raw = ''; try { raw = JSON.stringify(data); } catch (e) {}
   return '⚠️ ה-AI ענה אבל לא החזיר מצרכים או הכנה' + (data && data._models ? ' [' + data._models + ']' : '') + '. מה שהוא החזיר: ' + raw.slice(0, 160) + '  (שלחו צילום של ההודעה הזו)';
 }
-function runAI(text){
-  setBanner('⏳ מתרגם לעברית ומסדר את המצרכים וההכנה...');
-  callAI({ text }, 60000).then(r => {
-    if (!r.ok){ setBanner('לא הצלחתי לתרגם אוטומטית. סיבה: ' + r.reason + '. אפשר לנסות שוב או למלא ידנית.'); return; }
+function runAI(text, extra){
+  setBanner(extra ? '⏳ צופה בסרטון ומחלץ את המתכון (עד דקה בערך)...' : '⏳ מתרגם לעברית ומסדר את המצרכים וההכנה...');
+  callAI(extra || { text }, extra ? 150000 : 60000).then(r => {
+    if (!r.ok){ setBanner('לא הצלחתי לתרגם אוטומטית. סיבה: ' + r.reason + '. ' + (extra ? 'ייתכן שהסרטון פרטי או "לא רשום", רק סרטונים ציבוריים עובדים. ' : '') + 'אפשר לנסות שוב או למלא ידנית.'); return; }
     const out = r.data;
     const oi = normIngs(out.ingredients);
     const os = normSteps(out.steps);
-    if (out.error === 'not_recipe'){ setBanner('לא זיהיתי מתכון בטקסט. בדקו שהדבקתם את הכיתוב המלא.'); return; }
+    if (out.error === 'not_recipe'){ setBanner(extra ? 'לא זיהיתי מתכון בסרטון הזה.' : 'לא זיהיתי מתכון בטקסט. בדקו שהדבקתם את הכיתוב המלא.'); return; }
     if (!oi.length && !os.length){ setBanner(emptyAnswerNote(out)); return; }
     if (out.title) document.getElementById('f-name').value = out.title;
     if (out.servings && !document.getElementById('f-servings').value.trim()) document.getElementById('f-servings').value = out.servings;
@@ -1306,6 +1330,7 @@ const AI_RULES = `Rules:
 
 const PROMPT_IMAGES = `You are reading one or more photos or screenshots of a recipe (printed, handwritten, a phone screenshot, or text shown on a video). Several images are parts of the SAME recipe, in order: combine them into one recipe.\n` + AI_RULES;
 const PROMPT_TEXT = `The text below is the raw text of a recipe (a social media caption, a description, a transcript or a rough automatic import), possibly in another language and possibly mixed up. Extract the recipe from it.\n` + AI_RULES;
+const PROMPT_VIDEO = `You are watching a cooking video (it may be in any language). Extract the recipe from what is SAID and SHOWN in the video: the ingredients with their amounts and the preparation steps in order. If an amount is not said or shown, leave amount empty. Ignore intros, ads, greetings and sponsor messages.\n` + AI_RULES;
 
 const AI_SCHEMA = {
   type: 'OBJECT',
@@ -1376,20 +1401,24 @@ async function callGeminiDirect(body, ms){
   const imgs = (Array.isArray(body.images) && body.images.length ? body.images : [body.image]).slice(0, 4)
     .map(x => /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/s.exec(String(x || ''))).filter(Boolean).map(m => ({ mime: m[1], b64: m[2] }));
   const text = typeof body.text === 'string' ? body.text.trim().slice(0, 12000) : '';
-  if (!text && !imgs.length) return { ok: false, reason: 'התמונה לא התקבלה' };
-  const parts = text ? [{ text: PROMPT_TEXT + '\n\n--- SOURCE TEXT ---\n' + text }]
+  const yt = typeof body.youtube === 'string' ? body.youtube : '';
+  if (!text && !imgs.length && !yt) return { ok: false, reason: 'התמונה לא התקבלה' };
+  const parts = yt ? [{ file_data: { file_uri: yt } }, { text: PROMPT_VIDEO }] : text ? [{ text: PROMPT_TEXT + '\n\n--- SOURCE TEXT ---\n' + text }]
     : [{ text: PROMPT_IMAGES }, ...imgs.map(i => ({ inline_data: { mime_type: i.mime, data: i.b64 } }))];
   const errs = [];
   let lastEmpty = null; let any429 = false; const codes = []; const q = { daily: false, minute: false, zero: false, retry: 0 };
   for (const model of DIRECT_MODELS) {
     const ctrl = new AbortController(); const tmo = setTimeout(() => ctrl.abort(), ms);
     try {
-      const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + encodeURIComponent(key), {
+      const send = low => fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + encodeURIComponent(key), {
         method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts }], generationConfig: Object.assign(
           { responseMimeType: 'application/json', responseSchema: AI_SCHEMA, temperature: 0.1, maxOutputTokens: 8192 },
-          /^gemini-3/.test(model) ? { thinkingConfig: { thinkingLevel: 'low' } } : {}) })
+          /^gemini-3/.test(model) ? { thinkingConfig: { thinkingLevel: 'low' } } : {},
+          low ? { mediaResolution: 'MEDIA_RESOLUTION_LOW' } : {}) })
       });
+      let r = await send(!!yt);                       // וידאו ברזולוציה נמוכה: חוסך מכסה
+      if (yt && r.status === 400) r = await send(false); // אם המודל לא מכיר את ההגדרה, מנסים בלעדיה
       clearTimeout(tmo);
       const raw = await r.text();
       if (!r.ok) {
@@ -1679,6 +1708,15 @@ function removeStepRow(btn){
   btn.parentElement.remove();
   document.querySelectorAll('#stepFormList .num').forEach((n,i)=>{ n.textContent = i+1; });
 }
+function deleteCurrentRecipe(){
+  if (!currentRecipeId) return;
+  const r = recipes[currentRecipeId];
+  if (!r) return;
+  if (!confirm('למחוק את המתכון "' + (r.name || '') + '"?\nהמחיקה תהיה לכל המשפחה ואי אפשר לשחזר.')) return;
+  window.fbRecipes.remove(currentRecipeId)
+    .then(() => { toast('המתכון נמחק'); goBackFromRecipe(); })
+    .catch(err => { console.error(err); toast('המחיקה נכשלה. נסו שוב'); });
+}
 function editCurrentRecipe(){
   if (!currentRecipeId) return;
   const r = recipes[currentRecipeId];
@@ -1782,7 +1820,7 @@ Object.assign(window, {
   closeNewCatIfBackdrop, showAddView, runImport, onPhotoSelected, pickScan, onScanSelected, openTextSheet, closeTextSheetIfBackdrop, pasteFromClipboard, submitPastedText, refreshVideoPreview, selectCategoryChip,
   openNewCategorySheet, createNewCategory, addIngRow, addStepRow, removeStepRow,
   onStepImageSelected, removeStepImage,
-  editCurrentRecipe, saveRecipe, showView, toast, focusSearch, onSearchInput, smartAdd, smartPaste, setGeminiKey, syncSharedKey, setServerUrl, syncSharedServer
+  editCurrentRecipe, deleteCurrentRecipe, saveRecipe, showView, toast, focusSearch, onSearchInput, smartAdd, smartPaste, setGeminiKey, syncSharedKey, setServerUrl, syncSharedServer
 });
 refreshKeyLabel();
 refreshServerLabel();
@@ -1793,7 +1831,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden){ syn
 showView('home');
 
 // ---------- עדכון אוטומטי: אם עלתה גרסה חדשה לאתר, האפליקציה טוענת אותה לבד ----------
-const APP_VERSION = '20261025-1';
+const APP_VERSION = '20261029-2';
 function checkForUpdate(){
   fetch(location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text()).then(t => {
