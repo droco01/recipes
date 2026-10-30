@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>המתכונים שלי</title>
-<meta name="app-version" content="20261029-5">
+<meta name="app-version" content="20261030-1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -297,7 +297,7 @@
       <div class="eyebrow" id="greetEyebrow">שלום</div>
       <h1>מה מבשלים היום?</h1>
       <div class="sub" id="recipeCountSub">טוען מתכונים...</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261029-5</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261030-1</div>
     </div>
 
     <div class="search">
@@ -477,8 +477,8 @@
     <button class="add-link-btn" style="border-style:dashed; margin-bottom:10px;" onclick="smartPaste()">📋 הדבקה מהלוח</button>
     <button class="add-link-btn" id="smartGo" style="border:none; background:var(--accent); color:#fff; font-size:16px; padding:15px 0; margin-bottom:10px;" onclick="smartAdd()">✨ קרא את המתכון והכנס לטופס</button>
     <button class="add-link-btn" style="border-style:dashed; margin-bottom:10px;" onclick="showAddView('camera')">📷 צילום מסך או תמונות של המתכון (עד 4)</button>
-    <div class="sub" style="text-align:center; margin:2px 0 10px; font-size:13px; color:var(--accent); font-weight:700; cursor:pointer;" onclick="setGeminiKey()"><span id="keyLabel">🔑 הגדרת מפתח Gemini (פעם אחת)</span></div>
-    <div class="sub" style="text-align:center; margin:-4px 0 10px; font-size:13px; color:var(--accent); font-weight:700; cursor:pointer;" onclick="setServerUrl()"><span id="serverLabel">🌐 הגדרת שרת לקריאת קישורים (פעם אחת)</span></div>
+    <div class="sub" style="text-align:center; margin:2px 0 10px; font-size:13px; color:var(--accent); font-weight:700; cursor:pointer;" onclick="setGeminiKey()"><span id="keyLabel">🔑 מפתח Gemini אישי (לא חובה)</span></div>
+    <div class="sub" style="text-align:center; margin:-4px 0 10px; font-size:13px; color:var(--accent); font-weight:700; cursor:pointer;" onclick="setServerUrl()"><span id="serverLabel">🌐 שרת מובנה (Cloudflare). לחצו רק כדי לשנות</span></div>
     <div class="opt" onclick="showAddView('manual')">
       <div class="ic">✎</div><div class="txt"><div class="t">הזנה ידנית</div><div class="d">כותבים את המתכון בעצמכם</div></div>
     </div>
@@ -1122,10 +1122,6 @@ function ytWatchUrl(url){
 }
 // סרטון יוטיוב: Gemini צופה בסרטון ומחלץ את המתכון (דורש מפתח Gemini)
 function importYouTube(url){
-  if (!getGeminiKey()){
-    if (!confirm('כדי לקרוא מתכון מסרטון יוטיוב צריך מפתח Gemini. להגדיר עכשיו?')) return;
-    if (!setGeminiKey()) return;
-  }
   document.getElementById('linkSheetBackdrop').classList.remove('open');
   showAddView('manual');
   document.getElementById('add-title').textContent = 'מתכון מיוטיוב';
@@ -1144,7 +1140,7 @@ function runImport(){
     signal: ctrl.signal,
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url, key: getServerUrl() ? getGeminiKey() : undefined })
+    body: JSON.stringify({ url, key: getGeminiKey() || undefined })
   }).then(res => res.json()).then(data => {
     clearTimeout(tmo);
     document.getElementById('importSpinner').style.display = 'none';
@@ -1397,7 +1393,7 @@ function syncSharedKey(){
 }
 function refreshKeyLabel(){
   const el = document.getElementById('keyLabel');
-  if (el) el.textContent = getGeminiKey() ? '🔑 מפתח Gemini מוגדר …' + getGeminiKey().slice(-4) + ' (לחצו לשינוי)' : '🔑 הגדרת מפתח Gemini (פעם אחת)';
+  if (el) el.textContent = getGeminiKey() ? '🔑 מפתח אישי בטלפון …' + getGeminiKey().slice(-4) + ' (לחצו לשינוי)' : '🔑 מפתח Gemini אישי (לא חובה)';
 }
 function quotaInfo(raw){
   const info = { daily: false, minute: false, zero: false, retry: 0 };
@@ -1417,6 +1413,7 @@ function quotaInfo(raw){
 }
 async function callGeminiDirect(body, ms){
   const key = getGeminiKey();
+  const viaServer = !key;   // אין מפתח אישי בטלפון: עוברים דרך השרת ב-Cloudflare שמחזיק את המפתח
   const imgs = (Array.isArray(body.images) && body.images.length ? body.images : [body.image]).slice(0, 4)
     .map(x => /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/s.exec(String(x || ''))).filter(Boolean).map(m => ({ mime: m[1], b64: m[2] }));
   const text = typeof body.text === 'string' ? body.text.trim().slice(0, 12000) : '';
@@ -1426,11 +1423,11 @@ async function callGeminiDirect(body, ms){
   const parts = isCheck ? [{ text: PROMPT_CHECK + '\n\nRECIPE JSON:\n' + JSON.stringify(body.check) }] : yt ? [{ file_data: { file_uri: yt } }, { text: PROMPT_VIDEO }] : text ? [{ text: PROMPT_TEXT + '\n\n--- SOURCE TEXT ---\n' + text }]
     : [{ text: PROMPT_IMAGES }, ...imgs.map(i => ({ inline_data: { mime_type: i.mime, data: i.b64 } }))];
   const errs = [];
-  let lastEmpty = null; let any429 = false; const codes = []; const q = { daily: false, minute: false, zero: false, retry: 0 };
+  let lastEmpty = null; let any429 = false; let netFails = 0; const codes = []; const q = { daily: false, minute: false, zero: false, retry: 0 };
   for (const model of DIRECT_MODELS) {
     const ctrl = new AbortController(); const tmo = setTimeout(() => ctrl.abort(), ms);
     try {
-      const send = low => fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + encodeURIComponent(key), {
+      const send = low => fetch(viaServer ? getServerUrl() + '/gemini?model=' + encodeURIComponent(model) : 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + encodeURIComponent(key), {
         method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts }], generationConfig: Object.assign(
           { responseMimeType: 'application/json', responseSchema: isCheck ? CHECK_SCHEMA : AI_SCHEMA, temperature: 0.1, maxOutputTokens: 8192 },
@@ -1443,6 +1440,8 @@ async function callGeminiDirect(body, ms){
       const raw = await r.text();
       if (!r.ok) {
         let msg = raw; try { msg = JSON.parse(raw).error.message; } catch (e) {}
+        if (viaServer && /NO_SERVER_KEY/.test(raw)) return { ok: false, reason: 'בשרת ב-Cloudflare עדיין אין מפתח Gemini. הוסיפו אותו שם (Settings, Variables and Secrets), או הגדירו מפתח אישי בטלפון בשורת 🔑.' };
+        if (viaServer && /API key/i.test(msg)) return { ok: false, reason: 'המפתח ששמור בשרת ב-Cloudflare לא תקין. החליפו אותו שם.' };
         if (/API key/i.test(msg)) { try { localStorage.removeItem('geminiKey'); } catch (e) {} if (window.fbSettings) window.fbSettings.setKey('').catch(() => {}); refreshKeyLabel(); return { ok: false, reason: 'המפתח לא תקין. הגדירו מפתח חדש (' + String(msg).slice(0, 60) + ')' }; }
         errs.push(model + ' [' + r.status + ']: ' + String(msg).replace(/\s+/g, ' ').slice(0, 80));
         codes.push(model.replace('gemini-', '') + ':' + r.status);
@@ -1463,11 +1462,13 @@ async function callGeminiDirect(body, ms){
       return { ok: true, data: parsedAns };
     } catch (e) {
       clearTimeout(tmo);
+      netFails++;
       codes.push(model.replace('gemini-', '') + ':רשת');
       errs.push(model + ': ' + (e && e.name === 'AbortError' ? 'לא ענה בזמן' : String(e && e.message || e).slice(0, 60)));
     }
   }
-  const keyTail = ' [מפתח …' + key.slice(-4) + ' | ' + codes.join(', ') + ']';
+  const keyTail = ' [' + (viaServer ? 'מפתח בשרת' : 'מפתח …' + key.slice(-4)) + ' | ' + codes.join(', ') + ']';
+  if (viaServer && netFails === DIRECT_MODELS.length) return { ok: false, network: true, reason: 'אין חיבור לשרת ב-Cloudflare.' + keyTail };
   if (lastEmpty && !any429){ lastEmpty._models = codes.join(', '); return { ok: true, data: lastEmpty }; }
   if (any429){
     let why = 'המכסה החינמית של Gemini נגמרה.';
@@ -1479,10 +1480,12 @@ async function callGeminiDirect(body, ms){
   return { ok: false, reason: 'Gemini לא ענה.' + keyTail + ' ' + errs.join(' | ').slice(0, 200) };
 }
 // ===== שרת קריאת קישורים (Cloudflare Worker). הכתובת נשמרת במסד המשותף, כך שכל הטלפונים מקבלים אותה =====
-function getServerUrl(){ try { return localStorage.getItem('serverUrl') || ''; } catch (e) { return ''; } }
+const DEFAULT_SERVER = 'https://recipe-importer.drorco1.workers.dev';
+function getServerUrl(){ try { return localStorage.getItem('serverUrl') || DEFAULT_SERVER; } catch (e) { return DEFAULT_SERVER; } }
 function refreshServerLabel(){
   const el = document.getElementById('serverLabel');
-  if (el) el.textContent = getServerUrl() ? '🌐 שרת קישורים מוגדר (לחצו לשינוי)' : '🌐 הגדרת שרת לקריאת קישורים (פעם אחת)';
+  let custom = ''; try { custom = localStorage.getItem('serverUrl') || ''; } catch (e) {}
+  if (el) el.textContent = custom ? '🌐 שרת אחר מוגדר (לחצו לשינוי)' : '🌐 שרת מובנה (Cloudflare). לחצו רק כדי לשנות';
 }
 function setServerUrl(){
   const cur = getServerUrl();
@@ -1506,29 +1509,14 @@ function syncSharedServer(){
   }).catch(() => false);
 }
 // קריאה לשרת ה-AI. מחזירה {ok, data, reason} כשהסיבה כתובה בעברית ברורה במקרה של כישלון
-function callAI(body, ms, retry){
-  if (getGeminiKey()) return syncSharedKey().then(() => callGeminiDirect(body, ms));
-  if (retry === undefined) retry = 1;
-  const ctrl = new AbortController(); const tmo = setTimeout(() => ctrl.abort(), ms);
-  return fetch(NETLIFY_PARSE_PHOTO_URL, {
-    method: 'POST', signal: ctrl.signal,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  }).then(res => res.text().then(txt => {
-    clearTimeout(tmo);
-    let data = null; try { data = JSON.parse(txt); } catch (e) {}
-    if (res.status === 404) return { ok: false, reason: 'הפונקציה parse-photo לא נמצאת בשרת (לא הועלתה או שהבנייה נכשלה)' };
-    if (!data) return { ok: false, reason: 'תשובה לא תקינה מהשרת (קוד ' + res.status + ')' };
-    if (data.errorMessage) return { ok: false, reason: 'השרת קטע את הפעולה: ' + String(data.errorMessage).slice(0, 80) };
-    if (data.error === 'server_not_configured') return { ok: false, reason: 'חסר מפתח Gemini בהגדרות האתר בנטליפיי' };
-    if (data.error === 'ai_failed') return { ok: false, reason: 'Gemini לא ענה: ' + String(data.detail || '').slice(0, 300) };
-    if (data.error === 'bad_image' || data.error === 'bad_request') return { ok: false, reason: 'התמונה לא התקבלה בשרת' };
-    return { ok: true, data };
-  })).catch(err => {
-    clearTimeout(tmo);
-    if (!(err && err.name === 'AbortError') && retry > 0) return callAI(body, ms, retry - 1);
-    if (!(err && err.name === 'AbortError') && !getGeminiKey() && confirm('השרת לא עונה כרגע. להגדיר מפתח Gemini ישירות באפליקציה (פעם אחת) כדי לעקוף אותו?')){ if (setGeminiKey()) return callAI(body, ms, 0); }
-    return { ok: false, reason: err && err.name === 'AbortError' ? 'לא התקבלה תשובה בזמן' : 'אין חיבור לשרת (או שהשרת לקח יותר מדי זמן). נסו שוב' };
+function callAI(body, ms){
+  return syncSharedKey().then(() => callGeminiDirect(body, ms))
+    .then(r => (!r.ok && r.network) ? callGeminiDirect(body, ms) : r)   // ניסיון חוזר אחד אם אין חיבור
+    .then(r => {
+    if (!r.ok && r.network && !getGeminiKey() && confirm('אין חיבור לשרת. להגדיר מפתח Gemini אישי בטלפון הזה כדי לעקוף אותו?')){
+      if (setGeminiKey()) return callGeminiDirect(body, ms);
+    }
+    return r;
   });
 }
 // אחרי קריאה מוצלחת: מציג כמה נמצא, גולל למרכיבים ומסמן את המרכיבים וההכנה כדי שיהיה ברור מה הוכנס
@@ -1570,7 +1558,6 @@ function runConsistencyCheck(auto){
   const box = document.getElementById('checkResult');
   const rec = collectFormRecipe();
   if (!rec.ingredients.length || !rec.steps.length){ if (!auto) box.innerHTML = checkNote('כדי לבדוק צריך מצרכים והכנה בטופס.'); return; }
-  if (!getGeminiKey()){ if (!auto) box.innerHTML = checkNote('הבדיקה צריכה מפתח Gemini (השורה 🔑 בחלון "הוספת מתכון").'); return; }
   const my = ++checkSeq;
   box.innerHTML = checkNote('⏳ בודק התאמה...');
   callAI({ check: rec }, 60000).then(r => {
@@ -1955,7 +1942,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden){ syn
 showView('home');
 
 // ---------- עדכון אוטומטי: אם עלתה גרסה חדשה לאתר, האפליקציה טוענת אותה לבד ----------
-const APP_VERSION = '20261029-5';
+const APP_VERSION = '20261030-1';
 function checkForUpdate(){
   fetch(location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text()).then(t => {
