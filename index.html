@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>המתכונים שלי</title>
-<meta name="app-version" content="20261029-3">
+<meta name="app-version" content="20261029-5">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -297,7 +297,7 @@
       <div class="eyebrow" id="greetEyebrow">שלום</div>
       <h1>מה מבשלים היום?</h1>
       <div class="sub" id="recipeCountSub">טוען מתכונים...</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261029-3</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261029-5</div>
     </div>
 
     <div class="search">
@@ -328,7 +328,7 @@
       <div class="scrim"></div>
       <div class="topnav">
         <div class="icon-btn" onclick="showView('home')">→</div>
-        <div class="icon-btn" onclick="openEditCategorySheet(currentCategoryId)" aria-label="עריכת קטגוריה">✎</div>
+        <div class="icon-btn" onclick="openEditCurrentCategory()" aria-label="עריכת קטגוריה">✎</div>
       </div>
       <div class="heroBody">
         <div class="label" id="cat-hero-label"></div>
@@ -383,6 +383,11 @@
 
     <div class="import-banner" id="importBanner" style="display:none;">
       ℹ️ <span id="importBannerText"></span>
+    </div>
+
+    <div id="checkBox" style="margin:0 20px 16px;">
+      <button type="button" class="add-link-btn" style="border-style:solid; padding:10px 0;" onclick="runConsistencyCheck(false)">🔍 בדיקת התאמה בין המצרכים להכנה</button>
+      <div id="checkResult"></div>
     </div>
 
     <div id="scanRef" style="display:none; margin:0 20px 16px;">
@@ -1338,6 +1343,13 @@ const AI_RULES = `Rules:
 const PROMPT_IMAGES = `You are reading one or more photos or screenshots of a recipe (printed, handwritten, a phone screenshot, or text shown on a video). Several images are parts of the SAME recipe, in order: combine them into one recipe.\n` + AI_RULES;
 const PROMPT_TEXT = `The text below is the raw text of a recipe (a social media caption, a description, a transcript or a rough automatic import), possibly in another language and possibly mixed up. Extract the recipe from it.\n` + AI_RULES;
 const PROMPT_VIDEO = `You are watching a cooking video (it may be in any language). Extract the recipe from what is SAID and SHOWN in the video: the ingredients with their amounts and the preparation steps in order. If an amount is not said or shown, leave amount empty. Ignore intros, ads, greetings and sponsor messages.\n` + AI_RULES;
+const CHECK_SCHEMA = { type: 'OBJECT', properties: { issues: { type: 'ARRAY', items: { type: 'OBJECT', properties: { type: { type: 'STRING' }, text: { type: 'STRING' }, ingredient: { type: 'STRING' } }, required: ['type', 'text'] } } }, required: ['issues'] };
+const PROMPT_CHECK = `You are a careful cooking editor. You get a recipe in Hebrew as JSON (ingredients and steps). Find REAL problems only, and only when you are confident:
+- "missing_ingredient": an ingredient that a step clearly uses but that is not in the ingredients list. Put its Hebrew name in "ingredient".
+- "unused_ingredient": a listed ingredient that no step uses (ignore salt, pepper, water and oil "to taste").
+- "missing_detail": a step that lacks essential information (oven temperature, time, amount) that a cook would need.
+- "missing_step": an obvious gap in the process (for example a dish is baked but never mixed or assembled).
+Rules: write every "text" as ONE short natural Hebrew sentence that names the ingredient or step number. Do NOT invent new recipe content or amounts. At most 6 issues. If everything is consistent, return an empty "issues" array.`;
 
 const AI_SCHEMA = {
   type: 'OBJECT',
@@ -1409,8 +1421,9 @@ async function callGeminiDirect(body, ms){
     .map(x => /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/s.exec(String(x || ''))).filter(Boolean).map(m => ({ mime: m[1], b64: m[2] }));
   const text = typeof body.text === 'string' ? body.text.trim().slice(0, 12000) : '';
   const yt = typeof body.youtube === 'string' ? body.youtube : '';
-  if (!text && !imgs.length && !yt) return { ok: false, reason: 'התמונה לא התקבלה' };
-  const parts = yt ? [{ file_data: { file_uri: yt } }, { text: PROMPT_VIDEO }] : text ? [{ text: PROMPT_TEXT + '\n\n--- SOURCE TEXT ---\n' + text }]
+  const isCheck = !!(body.check && typeof body.check === 'object');
+  if (!text && !imgs.length && !yt && !isCheck) return { ok: false, reason: 'התמונה לא התקבלה' };
+  const parts = isCheck ? [{ text: PROMPT_CHECK + '\n\nRECIPE JSON:\n' + JSON.stringify(body.check) }] : yt ? [{ file_data: { file_uri: yt } }, { text: PROMPT_VIDEO }] : text ? [{ text: PROMPT_TEXT + '\n\n--- SOURCE TEXT ---\n' + text }]
     : [{ text: PROMPT_IMAGES }, ...imgs.map(i => ({ inline_data: { mime_type: i.mime, data: i.b64 } }))];
   const errs = [];
   let lastEmpty = null; let any429 = false; const codes = []; const q = { daily: false, minute: false, zero: false, retry: 0 };
@@ -1420,7 +1433,7 @@ async function callGeminiDirect(body, ms){
       const send = low => fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + encodeURIComponent(key), {
         method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts }], generationConfig: Object.assign(
-          { responseMimeType: 'application/json', responseSchema: AI_SCHEMA, temperature: 0.1, maxOutputTokens: 8192 },
+          { responseMimeType: 'application/json', responseSchema: isCheck ? CHECK_SCHEMA : AI_SCHEMA, temperature: 0.1, maxOutputTokens: 8192 },
           /^gemini-3/.test(model) ? { thinkingConfig: { thinkingLevel: 'low' } } : {},
           low ? { mediaResolution: 'MEDIA_RESOLUTION_LOW' } : {}) })
       });
@@ -1440,7 +1453,7 @@ async function callGeminiDirect(body, ms){
       const t = ((j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts) || []).map(p => p.text || '').join('').trim();
       if (!t) { errs.push(model + ': תשובה ריקה'); continue; }
       const parsedAns = JSON.parse(t.replace(/^```json\s*|```$/g, ''));
-      if (parsedAns.error !== 'not_recipe' && !normIngs(parsedAns.ingredients).length && !normSteps(parsedAns.steps).length){
+      if (!isCheck && parsedAns.error !== 'not_recipe' && !normIngs(parsedAns.ingredients).length && !normSteps(parsedAns.steps).length){
         codes.push(model.replace('gemini-', '') + ':ריק');
         errs.push(model + ': ענה בלי מצרכים והכנה');
         lastEmpty = parsedAns;
@@ -1519,6 +1532,53 @@ function callAI(body, ms, retry){
   });
 }
 // אחרי קריאה מוצלחת: מציג כמה נמצא, גולל למרכיבים ומסמן את המרכיבים וההכנה כדי שיהיה ברור מה הוכנס
+// ===== בדיקת התאמה: מצרכים מול הכנה =====
+function collectFormRecipe(){
+  const ings = Array.from(document.querySelectorAll('#ingFormList .ing-form-row')).map(r => ({
+    amount: r.querySelector('.in-amt').value.trim(), unit: r.querySelector('.in-unit').value.trim(), name: r.querySelector('.in-name').value.trim()
+  })).filter(i => i.name);
+  const steps = Array.from(document.querySelectorAll('#stepFormList textarea')).map(t => t.value.trim()).filter(Boolean);
+  return { title: document.getElementById('f-name').value.trim(), ingredients: ings, steps };
+}
+function checkNote(txt){ return '<div style="margin-top:10px; font-size:13px; font-weight:700; color:var(--muted);">' + escapeHtml(txt) + '</div>'; }
+function normIssues(data){
+  return (data && Array.isArray(data.issues) ? data.issues : []).map(x => ({
+    type: String((x && x.type) || 'info'), text: String((x && x.text) || '').trim(), ingredient: String((x && x.ingredient) || '').trim()
+  })).filter(x => x.text).slice(0, 8);
+}
+const CHECK_ICONS = { missing_ingredient: '➕', unused_ingredient: '❔', missing_detail: '⚠️', missing_step: '🧩' };
+function renderCheckIssues(issues){
+  const box = document.getElementById('checkResult');
+  if (!issues.length){
+    box.innerHTML = '<div style="margin-top:10px; padding:10px 12px; border-radius:12px; background:#E8F5E9; color:#2E7D32; font-weight:700; font-size:13px;">✅ המצרכים וההכנה תואמים, לא נמצא חסר.</div>';
+    return;
+  }
+  box.innerHTML = '<div style="margin-top:10px; padding:10px 12px; border-radius:12px; background:var(--accent-soft);">' +
+    '<div style="font-weight:800; font-size:13px; margin-bottom:6px; color:var(--accent);">נמצאו ' + issues.length + ' דברים לבדוק:</div>' +
+    issues.map(it => '<div style="display:flex; align-items:center; gap:8px; padding:6px 0; font-size:13.5px; line-height:1.45;">' +
+      '<span>' + (CHECK_ICONS[it.type] || '⚠️') + '</span><span style="flex:1;">' + escapeHtml(it.text) + '</span>' +
+      (it.type === 'missing_ingredient' && it.ingredient ? '<button type="button" class="add-link-btn" style="width:auto; padding:5px 10px; font-size:12px; margin:0;" data-ing="' + escapeHtml(it.ingredient) + '" onclick="addCheckIngredient(this)">הוסף</button>' : '') +
+      '</div>').join('') + '</div>';
+}
+function addCheckIngredient(btn){
+  addIngRow('', '', btn.dataset.ing);
+  btn.disabled = true; btn.textContent = '✓ נוסף';
+  toast('נוסף למצרכים. עדכנו כמות');
+}
+let checkSeq = 0;
+function runConsistencyCheck(auto){
+  const box = document.getElementById('checkResult');
+  const rec = collectFormRecipe();
+  if (!rec.ingredients.length || !rec.steps.length){ if (!auto) box.innerHTML = checkNote('כדי לבדוק צריך מצרכים והכנה בטופס.'); return; }
+  if (!getGeminiKey()){ if (!auto) box.innerHTML = checkNote('הבדיקה צריכה מפתח Gemini (השורה 🔑 בחלון "הוספת מתכון").'); return; }
+  const my = ++checkSeq;
+  box.innerHTML = checkNote('⏳ בודק התאמה...');
+  callAI({ check: rec }, 60000).then(r => {
+    if (my !== checkSeq) return;
+    if (!r.ok){ box.innerHTML = auto ? '' : checkNote('הבדיקה לא הצליחה: ' + r.reason); return; }
+    renderCheckIssues(normIssues(r.data));
+  });
+}
 function goToResult(ni, ns){
   // סופרים מה שבאמת נמצא בטופס (ולא מה שהשרת החזיר), כדי שההודעה תהיה אמיתית
   const realI = Array.from(document.querySelectorAll('#ingFormList .in-name')).filter(x => x.value.trim()).length;
@@ -1536,6 +1596,7 @@ function goToResult(ni, ns){
     ing.scrollIntoView({ behavior: 'smooth', block: 'start' });
     [ing, stp].forEach(b => { b.classList.remove('flash-block'); void b.offsetWidth; b.classList.add('flash-block'); });
   }, 200);
+  setTimeout(() => runConsistencyCheck(true), 900);
 }
 function analyzeScan(urls){
   setBanner('⏳ קורא ' + (urls.length > 1 ? urls.length + ' תמונות' : 'את התמונה') + '... זה לוקח כמה שניות');
@@ -1575,6 +1636,7 @@ function analyzeScan(urls){
   });
 }
 function resetForm(){
+  checkSeq++; { const cr = document.getElementById('checkResult'); if (cr) cr.innerHTML = ''; }
   pendingPhotoData = null;
   selectedCategoryId = null;
   document.getElementById('photoDrop').className = 'photo-drop';
@@ -1666,6 +1728,7 @@ function openEditCategorySheet(id){
   refreshCatPhotoPreview();
   document.getElementById('newCatBackdrop').classList.add('open');
 }
+function openEditCurrentCategory(){ openEditCategorySheet(currentCategoryId); }
 function onCatPhotoSelected(e){
   const file = e.target.files[0];
   if (!file) return;
@@ -1881,7 +1944,7 @@ Object.assign(window, {
   closeNewCatIfBackdrop, showAddView, runImport, onPhotoSelected, pickScan, onScanSelected, openTextSheet, closeTextSheetIfBackdrop, pasteFromClipboard, submitPastedText, refreshVideoPreview, selectCategoryChip,
   openNewCategorySheet, createNewCategory, addIngRow, addStepRow, removeStepRow,
   onStepImageSelected, removeStepImage,
-  editCurrentRecipe, deleteCurrentRecipe, saveRecipe, openEditCategorySheet, saveCategory, onCatPhotoSelected, removeCatPhoto, showView, toast, focusSearch, onSearchInput, smartAdd, smartPaste, setGeminiKey, syncSharedKey, setServerUrl, syncSharedServer
+  editCurrentRecipe, deleteCurrentRecipe, saveRecipe, openEditCategorySheet, openEditCurrentCategory, runConsistencyCheck, addCheckIngredient, saveCategory, onCatPhotoSelected, removeCatPhoto, showView, toast, focusSearch, onSearchInput, smartAdd, smartPaste, setGeminiKey, syncSharedKey, setServerUrl, syncSharedServer
 });
 refreshKeyLabel();
 refreshServerLabel();
@@ -1892,7 +1955,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden){ syn
 showView('home');
 
 // ---------- עדכון אוטומטי: אם עלתה גרסה חדשה לאתר, האפליקציה טוענת אותה לבד ----------
-const APP_VERSION = '20261029-3';
+const APP_VERSION = '20261029-5';
 function checkForUpdate(){
   fetch(location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text()).then(t => {
