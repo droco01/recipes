@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>המתכונים שלי</title>
-<meta name="app-version" content="20261030-1">
+<meta name="app-version" content="20261030-2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -297,7 +297,7 @@
       <div class="eyebrow" id="greetEyebrow">שלום</div>
       <h1>מה מבשלים היום?</h1>
       <div class="sub" id="recipeCountSub">טוען מתכונים...</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261030-1</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261030-2</div>
     </div>
 
     <div class="search">
@@ -523,7 +523,7 @@
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue, set, update, push, get, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, onValue, set, update, push, get, remove, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const cfg = {
   apiKey: "AIzaSyDoswrdSLhanCMX0KCuIW--MmxrI5KwCYM",
@@ -572,7 +572,8 @@ window.fbSettings = {
 window.fbShoppingList = {
   getOnce(){ return get(shoppingListRef).then(s => s.val() || {}); },
   update(patch){ return update(shoppingListRef, patch); },
-  setItems(arr){ return set(ref(db, 'shoppingList/items'), arr); }
+  setItems(arr){ return set(ref(db, 'shoppingList/items'), arr); },
+  transact(fn){ return runTransaction(shoppingListRef, cur => fn(cur)).then(r => r.committed); }
 };
 </script>
 
@@ -948,6 +949,78 @@ const RECIPE_CAT_NAME = 'מצרכים למתכונים';
 // כל פריט שנמצא בקטגוריה מותאמת למחלקות אחרות, ולכן אסור לכתוב לה עד שהיא מתוקנת.
 const SHOPPING_APP_FIXED = true;
 
+// ---------- שם מוצר נקי: בלי כמות ובלי יחידות מידה ("כפית סוכר" -> "סוכר") ----------
+const UNIT_WORDS = new Set(['כפית','כפיות','כף','כפות','כוס','כוסות','גרם','גר','קג','קילו','קילוגרם','ליטר','מל','מיליליטר','חצי','רבע','שליש','קורט','מעט','קצת','חופן','שן','שיני','יחידה','יחידות','חבילה','חבילת','פרוסה','פרוסות','ענף','ענפי','צרור','של']);
+const TAIL_WORDS = new Set(['לטעם','לקישוט','להגשה','לפי']);
+const stripQ = w => String(w).replace(/["'״׳.]/g, '');
+function cleanProductName(name){
+  let t = String(name || '').replace(/\([^)]*\)/g, ' ').split(/[,;،]/)[0].replace(/\s+/g, ' ').trim();
+  if (!t) return String(name || '').trim();
+  let tk = t.split(' ');
+  const cut = tk.findIndex((w, i) => i > 0 && TAIL_WORDS.has(stripQ(w)));
+  if (cut > 0) tk = tk.slice(0, cut);
+  const isQty = w => /^[\d\/.,\-–½¼¾⅓]+$/.test(w) || UNIT_WORDS.has(stripQ(w));
+  while (tk.length > 1 && isQty(tk[0])) tk.shift();
+  return tk.join(' ').trim() || t;
+}
+// ---------- התאמת שמות (יחיד/רבים, ה' הידיעה, ניקוד) ----------
+const FINALS = { 'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ' };
+function stemToken(w){
+  let t = String(w).replace(/[\u0591-\u05C7]/g, '').replace(/["'״׳.]/g, '');
+  if (t.length > 3 && t[0] === 'ה') t = t.slice(1);
+  if (t.length > 3 && (t.endsWith('ים') || t.endsWith('ות'))) t = t.slice(0, -2);
+  else if (t.length > 3 && t.endsWith('ה')) t = t.slice(0, -1);
+  while (t.length > 3 && t.endsWith('י')) t = t.slice(0, -1);
+  return t.replace(/[ךםןףץ]/g, c => FINALS[c]);
+}
+function nameTokens(name){
+  return String(name || '').replace(/\([^)]*\)/g, ' ').split(/[\s,;/\-]+/).filter(Boolean).map(stemToken).filter(t => t && t !== 'של');
+}
+// מחזיר את האינדקס של הפריט הקיים ברשימה שמתאים למצרך, או -1. מעדיפים שורות מקוריות (לא של מתכון) ושם עם הכי פחות מילים מיותרות
+function findShoppingAnchor(items, productName){
+  const want = nameTokens(productName);
+  if (!want.length) return -1;
+  let best = -1, bestScore = 0;
+  items.forEach((it, idx) => {
+    if (!it || !it.name) return;
+    const have = nameTokens(it.name);
+    if (!have.length || !want.every(w => have.includes(w))) return;     // כל מילות המצרך חייבות להופיע בשם הפריט
+    const extra = have.length - want.length;
+    const score = 100 - extra * 10 - (it.recipe ? 25 : 0);
+    if (score > bestScore) { best = idx; bestScore = score; }
+  });
+  return best;
+}
+function pickRecipeColor(items, recipeName){
+  const usedColors = {};
+  items.forEach(it => { if (it && it.recipe && Number.isInteger(it.recipeColor)) usedColors[it.recipe] = it.recipeColor; });
+  let color = usedColors[recipeName];
+  if (color === undefined){
+    const taken = new Set(Object.values(usedColors));
+    const all = [0, 1, 2, 3, 4, 5, 6, 7];
+    color = all.find(c => !taken.has(c));
+    if (color === undefined){
+      const cnt = {}; Object.values(usedColors).forEach(c => { cnt[c] = (cnt[c] || 0) + 1; });
+      color = all.slice().sort((x, y) => (cnt[x] || 0) - (cnt[y] || 0))[0];
+    }
+  }
+  return color;
+}
+function findRecipeCatId(list){
+  let catId = null;
+  Object.values(list.catCustom || {}).forEach(arr => { (arr || []).forEach(c => { if (!catId && c && c.name === RECIPE_CAT_NAME) catId = c.id; }); });
+  return catId;
+}
+// בונה תוכנית הוספה: לכל מצרך, מתחת לאיזו שורה קיימת הוא ייכנס (או לקטגוריית "מצרכים למתכונים" אם אין התאמה)
+function planShoppingAdds(items, chosen, recipeName){
+  return chosen.map(ing => {
+    const clean = cleanProductName(ing.name);
+    const idx = findShoppingAnchor(items, clean);
+    const dup = idx >= 0 && items.some(it => it && it.recipe === recipeName && findShoppingAnchor([it], clean) === 0 && it.catId === items[idx].catId);
+    return { clean, anchorIdx: idx, anchorName: idx >= 0 ? items[idx].name : null, dup };
+  });
+}
+
 function addToShoppingList(){
   if (!SHOPPING_APP_FIXED){
     toast('הלחצן כבוי עד שאפליקציית הקניות המתוקנת תעלה. שום דבר לא נשלח לרשימה');
@@ -960,54 +1033,61 @@ function addToShoppingList(){
   const chosen = r.ingredients.filter((ing, i) => selMap[i]);
   if (chosen.length === 0){ toast('סמנו 🛒 את המצרכים שחסרים לכם, והם יישלחו לרשימה'); return; }
   shoppingBusy = true;
+  const recipeId = currentRecipeId;
   window.fbShoppingList.getOnce().then(list => {
-    let catId = null;
-    Object.values(list.catCustom || {}).forEach(arr => {
-      (arr || []).forEach(c => { if (!catId && c && c.name === RECIPE_CAT_NAME) catId = c.id; });
-    });
-    if (!catId){
-      toast('באפליקציית הקניות חסרה קטגוריה בשם "מצרכים למתכונים". צור אותה בהגדרות ונסה שוב');
+    const items = Array.isArray(list.items) ? list.items : [];
+    if (list.items && !Array.isArray(list.items)){ toast('מבנה הרשימה לא צפוי, שום דבר לא נשלח'); return; }
+    const fallbackCat = findRecipeCatId(list);
+    const plan = planShoppingAdds(items, chosen, r.name);
+    const todo = plan.filter(p => !p.dup);
+    if (!todo.length){ toast('כל המצרכים האלה כבר ברשימה מהמתכון הזה'); return; }
+    if (todo.some(p => p.anchorIdx < 0) && !fallbackCat){
+      toast('באפליקציית הקניות חסרה קטגוריה בשם "מצרכים למתכונים", ולכן מצרכים בלי התאמה לא יכולים להיכנס. צור אותה בהגדרות ונסה שוב');
       return;
     }
-    const items = Array.isArray(list.items) ? list.items : [];
-    let nextId = Number(list.nextId) || 1;
-    items.forEach(it => { const m = it && /^i(\d+)$/.exec(it.id || ''); if (m && Number(m[1]) >= nextId) nextId = Number(m[1]) + 1; });
-    let idx = items.length;
-    const patch = {};
-    let added = 0;
-    // גוון לכל מתכון: אם המתכון כבר ברשימה משתמשים באותו גוון, אחרת בוחרים גוון שעדיין לא בשימוש
-    const usedColors = {};
-    items.forEach(it => { if (it && it.recipe && Number.isInteger(it.recipeColor)) usedColors[it.recipe] = it.recipeColor; });
-    let color = usedColors[r.name];
-    if (color === undefined){
-      const taken = new Set(Object.values(usedColors));
-      const all = [0, 1, 2, 3, 4, 5, 6, 7];
-      color = all.find(c => !taken.has(c));
-      if (color === undefined){
-        const cnt = {}; Object.values(usedColors).forEach(c => { cnt[c] = (cnt[c] || 0) + 1; });
-        color = all.slice().sort((a, b) => (cnt[a] || 0) - (cnt[b] || 0))[0];
-      }
-    }
-    // כל מתכון מקבל את המצרכים שלו, גם אם הם כפולים. שם הפריט הוא שם המצרך (עם כמות),
-    // ושם המתכון והגוון שלו נשמרים בשדות נפרדים. אפליקציית הקניות מציגה אותם בכותרת המתכון.
-    chosen.forEach(ing => {
-      const amt = [ing.amount, ing.unit].filter(Boolean).join(' ');
-      const label = ing.name + (amt ? ' (' + amt + ')' : '');
-      patch['items/' + (idx++)] = {
-        id: 'i' + (nextId++), name: label, catId: catId, state: 1, qty: 1,
-        note: '', recipe: r.name, recipeColor: color, addedBy: null, markedBy: null, justAdded: true, image: null
-      };
-      added++;
-    });
-    patch['nextId'] = nextId;
-    return window.fbShoppingList.update(patch).then(() => {
-      buySel[currentRecipeId] = {};
-      renderRecipeView(currentRecipeId);
-      toast(`נוספו ${added} מצרכים לקטגוריה "מצרכים למתכונים"`);
+    const lines = todo.map(p => '• ' + p.clean + (p.anchorIdx >= 0 ? '  ←  מתחת ל"' + p.anchorName + '"' : '  ←  בקטגוריה "מצרכים למתכונים" (לא נמצא ברשימה)'));
+    if (!confirm('להוסיף לרשימת הקניות?\n\n' + lines.slice(0, 14).join('\n') + (lines.length > 14 ? '\n... ועוד ' + (lines.length - 14) : '') + '\n\nשום פריט קיים לא יימחק ולא יזוז, רק יתווספו שורות חדשות.')) return;
+    let lastAdded = 0;
+    return window.fbShoppingList.transact(cur => {
+      if (cur === null || cur === undefined) return cur;                // הנתונים עוד לא נטענו: Firebase יחזור עם הנתונים האמיתיים
+      if (cur.items && !Array.isArray(cur.items)) return undefined;     // מבנה לא צפוי: מבטלים בלי לכתוב
+      const arr = Array.isArray(cur.items) ? cur.items.slice() : [];
+      let nextId = Number(cur.nextId) || 1;
+      arr.forEach(it => { const m = it && /^i(\d+)$/.exec(it.id || ''); if (m && Number(m[1]) >= nextId) nextId = Number(m[1]) + 1; });
+      const catFallback = findRecipeCatId(cur);
+      const color = pickRecipeColor(arr, r.name);
+      const mk = (name, catId) => ({ id: 'i' + (nextId++), name, catId, state: 1, qty: 1, note: '', recipe: r.name, recipeColor: color, addedBy: null, markedBy: null, justAdded: true, image: null });
+      let added = 0;
+      chosen.forEach(ing => {
+        const clean = cleanProductName(ing.name);
+        const idx = findShoppingAnchor(arr, clean);                       // מחפשים על הרשימה הנוכחית, כי אחרי כל הוספה המיקומים זזים
+        if (idx >= 0){
+          const anchor = arr[idx];
+          if (arr.some(it => it && it.recipe === r.name && it.catId === anchor.catId && findShoppingAnchor([it], clean) === 0)) return;   // כבר נוסף מהמתכון הזה
+          let pos = idx + 1;                                              // מתחת לשורה הקיימת, אחרי שורות של מתכונים שכבר נוספו לאותו מוצר
+          while (pos < arr.length && arr[pos] && arr[pos].recipe && arr[pos].catId === anchor.catId && findShoppingAnchor([arr[pos]], clean) === 0) pos++;
+          arr.splice(pos, 0, mk(anchor.name, anchor.catId));
+          added++;
+        } else if (catFallback){
+          if (arr.some(it => it && it.recipe === r.name && it.catId === catFallback && findShoppingAnchor([it], clean) === 0)) return;
+          arr.push(mk(clean, catFallback));
+          added++;
+        }
+      });
+      lastAdded = added;
+      if (!added) return undefined;
+      const out = Object.assign({}, cur);
+      out.items = arr; out.nextId = nextId;
+      return out;
+    }).then(committed => {
+      if (!committed){ toast('לא נוסף כלום לרשימה'); return; }
+      buySel[recipeId] = {};
+      renderRecipeView(recipeId);
+      toast('נוספו ' + lastAdded + ' מצרכים לרשימת הקניות');
     });
   }).catch(err => {
     console.error(err);
-    toast('משהו השתבש בהוספה לרשימת הקניות');
+    toast('משהו השתבש בהוספה לרשימת הקניות. שום דבר לא נמחק');
   }).finally(() => { shoppingBusy = false; });
 }
 
@@ -1942,7 +2022,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden){ syn
 showView('home');
 
 // ---------- עדכון אוטומטי: אם עלתה גרסה חדשה לאתר, האפליקציה טוענת אותה לבד ----------
-const APP_VERSION = '20261030-1';
+const APP_VERSION = '20261030-2';
 function checkForUpdate(){
   fetch(location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text()).then(t => {
