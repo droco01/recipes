@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>המתכונים שלי</title>
-<meta name="app-version" content="20261031-1">
+<meta name="app-version" content="20261031-2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -297,7 +297,7 @@
       <div class="eyebrow" id="greetEyebrow">שלום</div>
       <h1>מה מבשלים היום?</h1>
       <div class="sub" id="recipeCountSub">טוען מתכונים...</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261031-1</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261031-2</div>
     </div>
 
     <div class="search">
@@ -953,14 +953,17 @@ const SHOPPING_APP_FIXED = true;
 const UNIT_WORDS = new Set(['כפית','כפיות','כף','כפות','כוס','כוסות','גרם','גר','קג','קילו','קילוגרם','ליטר','מל','מיליליטר','חצי','רבע','שליש','קורט','מעט','קצת','חופן','שן','שיני','יחידה','יחידות','חבילה','חבילת','פרוסה','פרוסות','ענף','ענפי','צרור','של']);
 const TAIL_WORDS = new Set(['לטעם','לקישוט','להגשה','לפי']);
 const stripQ = w => String(w).replace(/["'״׳.]/g, '');
+const INVIS = /[\u200b-\u200f\u202a-\u202e\u2066-\u2069\ufeff\u00ad]/g;   // תווים בלתי נראים שמגיעים מהעתקה (כיווניות טקסט)
 function cleanProductName(name){
-  let t = String(name || '').replace(/\([^)]*\)/g, ' ').split(/[,;،]/)[0].replace(/\s+/g, ' ').trim();
+  let t = String(name || '').replace(INVIS, '').replace(/\([^)]*\)/g, ' ').split(/[,;،]/)[0].replace(/\s+/g, ' ').trim();
   if (!t) return String(name || '').trim();
   let tk = t.split(' ');
   const cut = tk.findIndex((w, i) => i > 0 && TAIL_WORDS.has(stripQ(w)));
   if (cut > 0) tk = tk.slice(0, cut);
   const isQty = w => /^[\d\/.,\-–½¼¾⅓]+$/.test(w) || UNIT_WORDS.has(stripQ(w));
   while (tk.length > 1 && isQty(tk[0])) tk.shift();
+  const noNum = tk.filter(w => !/^[\d.,%]+$/.test(w));          // "חלב 3%" -> "חלב"
+  if (noNum.length) tk = noNum;
   return tk.join(' ').trim() || t;
 }
 // ---------- התאמת שמות (יחיד/רבים, ה' הידיעה, ניקוד) ----------
@@ -983,23 +986,26 @@ function nameTokens(name, ignoreDescriptors){
   return kept.length ? kept : all;
 }
 function nameTokensRaw(name){
-  return String(name || '').replace(/\([^)]*\)/g, ' ').split(/[\s,;/\-]+/).filter(Boolean).map(stemToken).filter(t => t && t !== 'של');
+  return String(name || '').replace(INVIS, '').replace(/\([^)]*\)/g, ' ').split(/[\s,;/\-]+/).filter(Boolean).map(stemToken).filter(t => t && t !== 'של');
 }
 // מחזיר את האינדקס של הפריט הקיים ברשימה שמתאים למצרך, או -1. מעדיפים שורות מקוריות (לא של מתכון) ושם עם הכי פחות מילים מיותרות
+// מילים כלליות שבלעדי המילה שאחריהן אינן מוצר ("אבקת אפייה" != "אבקת מרק")
+const GENERIC_HEADS = new Set(['אבקת','מיץ','רוטב','חמאת','גבינת','פירורי','עלי','תמצית','סירופ','משחת','קרם','אבקה'].map(w => stemToken(w)));
+// מזהה את שורת המוצר ברשימה לפי שם המוצר בלבד. מילים נלוות (סוג, מותג, אחוזים) לא מונעות התאמה, הן רק משפיעות על הבחירה בין כמה מועמדים
 function findShoppingAnchor(items, productName){
   const want = nameTokens(productName, true);
   if (!want.length) return -1;
-  // כמה מילים מהמצרך חייבות להופיע בשם הפריט: קצר = כולן, ארוך (3 ומעלה) = כולן חוץ מאחת, אבל המילה הראשונה (שם המוצר) תמיד
-  const need = want.length >= 3 ? want.length - 1 : want.length;
-  let best = -1, bestScore = 0;
+  const headTokens = (GENERIC_HEADS.has(want[0]) && want.length > 1) ? [want[0], want[1]] : [want[0]];
+  const rest = want.filter(w => !headTokens.includes(w));
+  let best = -1, bestScore = -1e9;
   items.forEach((it, idx) => {
     if (!it || !it.name) return;
     const have = nameTokens(it.name, false);
-    if (!have.length) return;
-    const hit = want.filter(w => have.includes(w));
-    if (hit.length < need || !have.includes(want[0])) return;
-    const extra = have.length - hit.length;
-    const score = 100 - extra * 8 - (want.length - hit.length) * 15 - (it.recipe ? 25 : 0);
+    if (!headTokens.every(t => have.includes(t))) return;              // המוצר עצמו חייב להופיע
+    const extra = have.filter(t => !want.includes(t));
+    const missing = rest.filter(t => !have.includes(t));
+    if (extra.length > 0 && missing.length > 0) return;                // סוג אחר של אותו מוצר (שעועית שחורה מול ירוקה): לא מתאים
+    const score = 50 + (have[0] === headTokens[0] ? 20 : 0) + 30 * (rest.length - missing.length) - 5 * extra.length - 10 * missing.length - (it.recipe ? 25 : 0);
     if (score > bestScore) { best = idx; bestScore = score; }
   });
   return best;
@@ -2051,7 +2057,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden){ syn
 showView('home');
 
 // ---------- עדכון אוטומטי: אם עלתה גרסה חדשה לאתר, האפליקציה טוענת אותה לבד ----------
-const APP_VERSION = '20261031-1';
+const APP_VERSION = '20261031-2';
 function checkForUpdate(){
   fetch(location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text()).then(t => {
