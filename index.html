@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>המתכונים שלי</title>
-<meta name="app-version" content="20261030-2">
+<meta name="app-version" content="20261031-1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -297,7 +297,7 @@
       <div class="eyebrow" id="greetEyebrow">שלום</div>
       <h1>מה מבשלים היום?</h1>
       <div class="sub" id="recipeCountSub">טוען מתכונים...</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261030-2</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261031-1</div>
     </div>
 
     <div class="search">
@@ -968,25 +968,38 @@ const FINALS = { 'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ' };
 function stemToken(w){
   let t = String(w).replace(/[\u0591-\u05C7]/g, '').replace(/["'״׳.]/g, '');
   if (t.length > 3 && t[0] === 'ה') t = t.slice(1);
-  if (t.length > 3 && (t.endsWith('ים') || t.endsWith('ות'))) t = t.slice(0, -2);
+  if (t.length > 4 && t.endsWith('יות')) t = t.slice(0, -3);
+  else if (t.length > 4 && t.endsWith('ית')) t = t.slice(0, -2);
+  else if (t.length > 3 && (t.endsWith('ים') || t.endsWith('ות'))) t = t.slice(0, -2);
   else if (t.length > 3 && t.endsWith('ה')) t = t.slice(0, -1);
   while (t.length > 3 && t.endsWith('י')) t = t.slice(0, -1);
   return t.replace(/[ךםןףץ]/g, c => FINALS[c]);
 }
-function nameTokens(name){
+const DESCRIPTORS = new Set(['קפוא','קפואה','קפואים','קפואות','טרי','טרייה','טריים','טריות','קצוץ','קצוצה','קצוצים','מגורד','מגורדת','חתוך','חתוכה','חתוכים','פרוס','פרוסה','פרוסות','מבושל','מבושלת','מבושלים','גדול','גדולה','גדולים','קטן','קטנה','קטנים','בינוני','בינונית','דק','רך','רכה','שלם','שלמה','טחון','טחונה','מרוסק','מרוסקת','קלוי','קלויה'].map(w => stemToken(w)));
+function nameTokens(name, ignoreDescriptors){
+  const all = nameTokensRaw(name);
+  if (!ignoreDescriptors) return all;
+  const kept = all.filter(t => !DESCRIPTORS.has(t));
+  return kept.length ? kept : all;
+}
+function nameTokensRaw(name){
   return String(name || '').replace(/\([^)]*\)/g, ' ').split(/[\s,;/\-]+/).filter(Boolean).map(stemToken).filter(t => t && t !== 'של');
 }
 // מחזיר את האינדקס של הפריט הקיים ברשימה שמתאים למצרך, או -1. מעדיפים שורות מקוריות (לא של מתכון) ושם עם הכי פחות מילים מיותרות
 function findShoppingAnchor(items, productName){
-  const want = nameTokens(productName);
+  const want = nameTokens(productName, true);
   if (!want.length) return -1;
+  // כמה מילים מהמצרך חייבות להופיע בשם הפריט: קצר = כולן, ארוך (3 ומעלה) = כולן חוץ מאחת, אבל המילה הראשונה (שם המוצר) תמיד
+  const need = want.length >= 3 ? want.length - 1 : want.length;
   let best = -1, bestScore = 0;
   items.forEach((it, idx) => {
     if (!it || !it.name) return;
-    const have = nameTokens(it.name);
-    if (!have.length || !want.every(w => have.includes(w))) return;     // כל מילות המצרך חייבות להופיע בשם הפריט
-    const extra = have.length - want.length;
-    const score = 100 - extra * 10 - (it.recipe ? 25 : 0);
+    const have = nameTokens(it.name, false);
+    if (!have.length) return;
+    const hit = want.filter(w => have.includes(w));
+    if (hit.length < need || !have.includes(want[0])) return;
+    const extra = have.length - hit.length;
+    const score = 100 - extra * 8 - (want.length - hit.length) * 15 - (it.recipe ? 25 : 0);
     if (score > bestScore) { best = idx; bestScore = score; }
   });
   return best;
@@ -1056,6 +1069,7 @@ function addToShoppingList(){
       arr.forEach(it => { const m = it && /^i(\d+)$/.exec(it.id || ''); if (m && Number(m[1]) >= nextId) nextId = Number(m[1]) + 1; });
       const catFallback = findRecipeCatId(cur);
       const color = pickRecipeColor(arr, r.name);
+      const io = cur.itemOrder ? JSON.parse(JSON.stringify(cur.itemOrder)) : null;   // סדר השורות בכל חנות
       const mk = (name, catId) => ({ id: 'i' + (nextId++), name, catId, state: 1, qty: 1, note: '', recipe: r.name, recipeColor: color, addedBy: null, markedBy: null, justAdded: true, image: null });
       let added = 0;
       chosen.forEach(ing => {
@@ -1066,7 +1080,21 @@ function addToShoppingList(){
           if (arr.some(it => it && it.recipe === r.name && it.catId === anchor.catId && findShoppingAnchor([it], clean) === 0)) return;   // כבר נוסף מהמתכון הזה
           let pos = idx + 1;                                              // מתחת לשורה הקיימת, אחרי שורות של מתכונים שכבר נוספו לאותו מוצר
           while (pos < arr.length && arr[pos] && arr[pos].recipe && arr[pos].catId === anchor.catId && findShoppingAnchor([arr[pos]], clean) === 0) pos++;
-          arr.splice(pos, 0, mk(anchor.name, anchor.catId));
+          const newItem = mk(anchor.name, anchor.catId);
+          arr.splice(pos, 0, newItem);
+          // אפליקציית הקניות מציגה לפי itemOrder של כל חנות; פריט שלא מופיע שם נדחק לסוף הקטגוריה. לכן מכניסים את המזהה מתחת לשורה הקיימת בכל חנות
+          if (io) Object.keys(io).forEach(store => {
+            const ord = io[store] && io[store][anchor.catId];
+            if (!Array.isArray(ord)) return;
+            const ai = ord.indexOf(anchor.id);
+            if (ai < 0) return;
+            let j = ai + 1;
+            while (j < ord.length){
+              const it2 = arr.find(x => x && x.id === ord[j]);
+              if (it2 && it2.recipe && it2.catId === anchor.catId && findShoppingAnchor([it2], clean) === 0) j++; else break;
+            }
+            ord.splice(j, 0, newItem.id);
+          });
           added++;
         } else if (catFallback){
           if (arr.some(it => it && it.recipe === r.name && it.catId === catFallback && findShoppingAnchor([it], clean) === 0)) return;
@@ -1078,6 +1106,7 @@ function addToShoppingList(){
       if (!added) return undefined;
       const out = Object.assign({}, cur);
       out.items = arr; out.nextId = nextId;
+      if (io) out.itemOrder = io;
       return out;
     }).then(committed => {
       if (!committed){ toast('לא נוסף כלום לרשימה'); return; }
@@ -2022,7 +2051,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden){ syn
 showView('home');
 
 // ---------- עדכון אוטומטי: אם עלתה גרסה חדשה לאתר, האפליקציה טוענת אותה לבד ----------
-const APP_VERSION = '20261030-2';
+const APP_VERSION = '20261031-1';
 function checkForUpdate(){
   fetch(location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text()).then(t => {
