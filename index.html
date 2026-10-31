@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>המתכונים שלי</title>
-<meta name="app-version" content="20261031-2">
+<meta name="app-version" content="20261031-3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -297,7 +297,7 @@
       <div class="eyebrow" id="greetEyebrow">שלום</div>
       <h1>מה מבשלים היום?</h1>
       <div class="sub" id="recipeCountSub">טוען מתכונים...</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261031-2</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;direction:ltr;text-align:right;">v20261031-3</div>
     </div>
 
     <div class="search">
@@ -999,13 +999,12 @@ function findShoppingAnchor(items, productName){
   const rest = want.filter(w => !headTokens.includes(w));
   let best = -1, bestScore = -1e9;
   items.forEach((it, idx) => {
-    if (!it || !it.name) return;
+    if (!it || !it.name || it.recipe) return;                          // שורות של מתכונים לא משמשות עוגן, רק שורות המוצר הרגילות
     const have = nameTokens(it.name, false);
-    if (!headTokens.every(t => have.includes(t))) return;              // המוצר עצמו חייב להופיע
+    if (!headTokens.every(t => have.includes(t))) return;              // המוצר עצמו חייב להופיע (אורז עגול נמצא מתחת ל"אורז יסמין")
     const extra = have.filter(t => !want.includes(t));
     const missing = rest.filter(t => !have.includes(t));
-    if (extra.length > 0 && missing.length > 0) return;                // סוג אחר של אותו מוצר (שעועית שחורה מול ירוקה): לא מתאים
-    const score = 50 + (have[0] === headTokens[0] ? 20 : 0) + 30 * (rest.length - missing.length) - 5 * extra.length - 10 * missing.length - (it.recipe ? 25 : 0);
+    const score = 50 + (have[0] === headTokens[0] ? 20 : 0) + 30 * (rest.length - missing.length) - 5 * extra.length - 10 * missing.length;
     if (score > bestScore) { best = idx; bestScore = score; }
   });
   return best;
@@ -1035,7 +1034,7 @@ function planShoppingAdds(items, chosen, recipeName){
   return chosen.map(ing => {
     const clean = cleanProductName(ing.name);
     const idx = findShoppingAnchor(items, clean);
-    const dup = idx >= 0 && items.some(it => it && it.recipe === recipeName && findShoppingAnchor([it], clean) === 0 && it.catId === items[idx].catId);
+    const dup = idx >= 0 && items.some(it => it && it.recipe === recipeName && it.forId === items[idx].id);
     return { clean, anchorIdx: idx, anchorName: idx >= 0 ? items[idx].name : null, dup };
   });
 }
@@ -1064,7 +1063,7 @@ function addToShoppingList(){
       toast('באפליקציית הקניות חסרה קטגוריה בשם "מצרכים למתכונים", ולכן מצרכים בלי התאמה לא יכולים להיכנס. צור אותה בהגדרות ונסה שוב');
       return;
     }
-    const lines = todo.map(p => '• ' + p.clean + (p.anchorIdx >= 0 ? '  ←  מתחת ל"' + p.anchorName + '"' : '  ←  בקטגוריה "מצרכים למתכונים" (לא נמצא ברשימה)'));
+    const lines = todo.map(p => '• ' + p.clean + (p.anchorIdx >= 0 ? ' (' + r.name + ')  ←  מתחת ל"' + p.anchorName + '"' : '  ←  בקטגוריה "מצרכים למתכונים" (לא נמצא ברשימה)'));
     if (!confirm('להוסיף לרשימת הקניות?\n\n' + lines.slice(0, 14).join('\n') + (lines.length > 14 ? '\n... ועוד ' + (lines.length - 14) : '') + '\n\nשום פריט קיים לא יימחק ולא יזוז, רק יתווספו שורות חדשות.')) return;
     let lastAdded = 0;
     return window.fbShoppingList.transact(cur => {
@@ -1076,17 +1075,17 @@ function addToShoppingList(){
       const catFallback = findRecipeCatId(cur);
       const color = pickRecipeColor(arr, r.name);
       const io = cur.itemOrder ? JSON.parse(JSON.stringify(cur.itemOrder)) : null;   // סדר השורות בכל חנות
-      const mk = (name, catId) => ({ id: 'i' + (nextId++), name, catId, state: 1, qty: 1, note: '', recipe: r.name, recipeColor: color, addedBy: null, markedBy: null, justAdded: true, image: null });
+      const mk = (name, catId, forId) => Object.assign({ id: 'i' + (nextId++), name, catId, state: 1, qty: 1, note: '', recipe: r.name, recipeColor: color, addedBy: null, markedBy: null, justAdded: true, image: null }, forId ? { forId } : {});
       let added = 0;
       chosen.forEach(ing => {
         const clean = cleanProductName(ing.name);
         const idx = findShoppingAnchor(arr, clean);                       // מחפשים על הרשימה הנוכחית, כי אחרי כל הוספה המיקומים זזים
         if (idx >= 0){
           const anchor = arr[idx];
-          if (arr.some(it => it && it.recipe === r.name && it.catId === anchor.catId && findShoppingAnchor([it], clean) === 0)) return;   // כבר נוסף מהמתכון הזה
+          if (arr.some(it => it && it.recipe === r.name && it.forId === anchor.id)) return;   // כבר נוסף מהמתכון הזה
           let pos = idx + 1;                                              // מתחת לשורה הקיימת, אחרי שורות של מתכונים שכבר נוספו לאותו מוצר
-          while (pos < arr.length && arr[pos] && arr[pos].recipe && arr[pos].catId === anchor.catId && findShoppingAnchor([arr[pos]], clean) === 0) pos++;
-          const newItem = mk(anchor.name, anchor.catId);
+          while (pos < arr.length && arr[pos] && arr[pos].forId === anchor.id) pos++;
+          const newItem = mk(clean + ' (' + r.name + ')', anchor.catId, anchor.id);   // שם המוצר + שם המתכון, בשורה אחת
           arr.splice(pos, 0, newItem);
           // אפליקציית הקניות מציגה לפי itemOrder של כל חנות; פריט שלא מופיע שם נדחק לסוף הקטגוריה. לכן מכניסים את המזהה מתחת לשורה הקיימת בכל חנות
           if (io) Object.keys(io).forEach(store => {
@@ -1097,14 +1096,14 @@ function addToShoppingList(){
             let j = ai + 1;
             while (j < ord.length){
               const it2 = arr.find(x => x && x.id === ord[j]);
-              if (it2 && it2.recipe && it2.catId === anchor.catId && findShoppingAnchor([it2], clean) === 0) j++; else break;
+              if (it2 && it2.forId === anchor.id) j++; else break;
             }
             ord.splice(j, 0, newItem.id);
           });
           added++;
         } else if (catFallback){
-          if (arr.some(it => it && it.recipe === r.name && it.catId === catFallback && findShoppingAnchor([it], clean) === 0)) return;
-          arr.push(mk(clean, catFallback));
+          if (arr.some(it => it && it.recipe === r.name && it.catId === catFallback && it.name === clean)) return;
+          arr.push(mk(clean, catFallback));                               // בקטגוריית המתכונים שם המתכון מופיע בכותרת, לכן רק שם המוצר
           added++;
         }
       });
@@ -2057,7 +2056,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden){ syn
 showView('home');
 
 // ---------- עדכון אוטומטי: אם עלתה גרסה חדשה לאתר, האפליקציה טוענת אותה לבד ----------
-const APP_VERSION = '20261031-2';
+const APP_VERSION = '20261031-3';
 function checkForUpdate(){
   fetch(location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text()).then(t => {
